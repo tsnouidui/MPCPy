@@ -1,6 +1,8 @@
-===================
-Variables and Units
-===================
+=========
+Variables
+=========
+
+.. automodule:: mpcpy.variables
 
 General
 =======

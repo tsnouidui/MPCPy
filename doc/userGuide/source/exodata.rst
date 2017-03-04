@@ -8,67 +8,9 @@ ExoData
 
 .. autoclass:: mpcpy.exodata.Internal
 
+.. autoclass:: mpcpy.exodata.Control
 
-Control
-=======
-
-Control data represents control inputs to a system or model.  The variables listed in a Control data object are special in that they are considered optimization variables during model optimization.
-
-Structure
----------
-
-Exogenous control data has the following organization:
-
-::
-
-    control.data = {"Control Variable Name" : mpcpy.Variables.Timeseries}
-
-The control variable names should match the control input variables of the model.
-
-Classes
--------
-
-Control data may be collected using the following classes:
-
-    ControlFromCSV
-    
-        Collects control data from a CSV file.  This class requires a variable map to match CSV column headers with control variable names.  The variable map is a python dictionary of the form: 
-
-::
-
-    variable_map = {"Column Header Name" : ("Control Variable Name", 
-                                            mpcpy.Units.unit)}
-
-
-Other Inputs
-============
-
-Other Input data represents miscellaneous inputs to a model.  The variables listed in an Other Inputs data object are not acted upon in any special way.
-
-Structure
----------
-
-Other input data has the following organization:
-
-::
-
-    other_input.data = {"Other Input Variable Name" : mpcpy.Variables.Timeseries}
-
-The other input variable names should match those of the model.
-
-Classes
--------
-
-Other input data may be collected using the following classes:
-
-    OtherInputFromCSV
-    
-        Collect other input data from a CSV file.  This class requires a variable map to match CSV column headers with other input variable names.  The variable map is a python dictionary of the form: 
-
-::
-
-    variable_map = {"Column Header Name" : ("Other Input Variable Name", 
-                                            mpcpy.Units.unit)}
+.. autoclass:: mpcpy.exodata.OtherInput
 
 
 Price

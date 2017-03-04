@@ -109,6 +109,45 @@ Internal variable name list:
 - intRad - radiative internal load
 - intLat - latent internal load
 
+
+=======
+Control
+=======
+
+Control data represents control inputs to a system or model.  The variables 
+listed in a Control data object are special in that they are considered 
+optimization variables during model optimization. Exogenous control data has 
+the following organization:
+
+``control.data = {"Control Variable Name" : mpcpy.Variables.Timeseries}``
+
+The control variable names should match the control input variables of the model.
+
+Classes
+=======
+
+.. autoclass:: mpcpy.exodata.ControlFromCSV
+    :members: collect_data, display_data, get_base_data
+
+
+===========
+Other Input
+===========
+
+Other Input data represents miscellaneous inputs to a model.  The variables 
+listed in an Other Inputs data object are not acted upon in any special way.  
+Other input data has the following organization:
+
+``other_input.data = {"Other Input Variable Name" : mpcpy.Variables.Timeseries}``
+
+The other input variable names should match those of the model.
+
+Classes
+=======
+
+.. autoclass:: mpcpy.exodata.OtherInputFromCSV
+    :members: collect_data, display_data, get_base_data
+
 """
 
 from abc import ABCMeta
@@ -373,35 +412,14 @@ class _Internal(_Type):
                                                                        start_time=self.start_time, final_time=self.final_time, \
                                                                        cleaning_type = self._cleaning_type, \
                                                                        cleaning_args = self._cleaning_args);        
-        
-              
-## Controls       
-class Control(_Type):
-    '''Interface for obtaining control-related Exogenous data from a source.
-        An object with an ControlType interface must gather control data.
-        
-        To standardize data transfer within mpcpy, the returned control data 
-        should be saved into a dictionary with the following format:   
-        
-        {
-        “ControlName” : Timeseries mpcpy.Variable          
-        }   
-        
-        '''
 
-    def display_data(self):
-        '''Display data as pandas dataframe.'''
-        self._make_mpcpy_ts_list();
-        df_weather = self._mpcpy_ts_list_to_dataframe(self._ts_list, display_data = True);
-        return df_weather;
-        
-    def get_base_data(self):
-        '''Get base data as pandas dataframe.'''
-        self._make_mpcpy_ts_list();        
-        df_weather = self._mpcpy_ts_list_to_dataframe(self._ts_list, display_data = False);
-        return df_weather;
+         
+## Controls       
+class _Control(_Type):
+    '''Mixin class for control data.'''
         
     def _make_mpcpy_ts_list(self):
+        '''Make mpcpy timeseries list.'''
         self._ts_list = [];
         for key in self.data.keys():
             if self.data[key].variability == 'Timeseries':
@@ -417,32 +435,11 @@ class Control(_Type):
                                                                  cleaning_args = self._cleaning_args);   
                                                                  
 ## Other_Inputs       
-class OtherInput(_Type):
-    '''Interface for obtaining other input-related Exogenous data from a source.      
-        An object with an OtherInputType interface must gather other input data.
-        
-        To standardize data transfer within mpcpy, the returned other input data 
-        should be saved into a dictionary with the following format:   
-        
-        {
-        “OtherInputName” : Timeseries mpcpy.Variable          
-        }   
-        
-        '''
-
-    def display_data(self):
-        '''Display data as pandas dataframe.'''
-        self._make_mpcpy_ts_list();
-        df_weather = self._mpcpy_ts_list_to_dataframe(self._ts_list, display_data = True);
-        return df_weather;
-        
-    def get_base_data(self):
-        '''Get base data as pandas dataframe.'''
-        self._make_mpcpy_ts_list();        
-        df_weather = self._mpcpy_ts_list_to_dataframe(self._ts_list, display_data = False);
-        return df_weather;
-        
+class _OtherInput(_Type):
+    '''Mixin class for other input data.'''
+       
     def _make_mpcpy_ts_list(self):
+        '''Make mpcpy timeseries list.'''
         self._ts_list = [];
         for key in self.data.keys():
             if self.data[key].variability == 'Timeseries':
@@ -800,7 +797,6 @@ class WeatherFromCSV(_Weather, utility.DAQ):
         '''Constructor of CSV file weather data object.'''
         self.filepath = filepath;  
         self.data = {};   
-        # Dictionary of format {'csvHeader' : ('weaVarName', mpcpyUnit)}
         self.variable_map = variable_map;          
         # Process Variables
         if 'process_variables' in kwargs:
@@ -848,17 +844,18 @@ class InternalFromCSV(_Internal, utility.DAQ):
         Timezone name.        
 
     '''
+    
     def __init__(self, filepath, variable_map, **kwargs):
         ''' Constructor of csv internal source.'''
         self.filepath = filepath;
-        self.data = {};   
-        # Dictionary of format {'csvHeader' : ('zone', 'RadConLatOcc', mpcpyUnit)}
+        self.data = {};
         self.variable_map = variable_map;
         # Common kwargs
         self._parse_daq_kwargs(kwargs);
         self._parse_time_zone_kwargs(kwargs);
                    
     def _collect_data(self, start_time, final_time):
+        '''Collect internal data from CSV file.'''
         # Set time interval
         self._set_time_interval(start_time, final_time);
         # Get bulk time series        
@@ -903,6 +900,7 @@ class InternalFromOccupancyModel(_Internal):
         self._parse_time_zone_kwargs(kwargs);
         
     def _collect_data(self, start_time, final_time):
+        '''Collect internal data from an occupancy model object.'''
         # Set time interval
         self._set_time_interval(start_time, final_time);
         # Get bulk time series
@@ -913,28 +911,69 @@ class InternalFromOccupancyModel(_Internal):
                 self.data[zone][varname] = variables.Timeseries(varname+'_'+zone, ts[self.start_time:self.final_time], self.unit);
         
 #%% Control source implementations        
-class ControlFromCSV(Control, utility.DAQ):
-    '''A control source interface for csv file data source.'''
-    def __init__(self, csv_filepath, variable_map, **kwargs):
+class ControlFromCSV(_Control, utility.DAQ):
+    '''
+    Collects control data from a CSV file.
+
+    Parameters
+    ----------
+    filepath : string
+        CSV file path.
+    variable_map : dictionary
+        {"Column Header Name" : ("Control Variable Name", mpcpy.Units.unit)}.
+
+    Attributes
+    ----------
+    data : dictionary
+        {"Control Variable Name" : mpcpy.Variables.Timeseries}.
+    lat : numeric
+        Latitude in degrees.  For timezone.
+    lon : numeric
+        Longitude in degrees.  For timezone.
+    tz_name : string
+        Timezone name.        
+
+    '''
+    def __init__(self, filepath, variable_map, **kwargs):
         ''' Constructor of csv control source.'''
-        self.name = 'control_from_csv';
-        self.filepath = csv_filepath;
-        self.data = {};   
-        # Dictionary of format {'csvHeader' : ('conVarName', mpcpyUnit)}
+        self.filepath = filepath;
+        self.data = {};
         self.variable_map = variable_map;
         # Common kwargs
         self._parse_daq_kwargs(kwargs);
         self._parse_time_zone_kwargs(kwargs);             
                    
-    def collect_data(self, start_time, final_time):
+    def _collect_data(self, start_time, final_time):
+        '''Collect control data from CSV file.'''
         # Set time interval
         self._set_time_interval(start_time, final_time);
         # Get bulk time series        
         self._read_timeseries_from_csv();
         
 #%% Other input source implementations        
-class OtherInputFromCSV(OtherInput, utility.DAQ):
-    '''An other input source interface for csv file data source.'''
+class OtherInputFromCSV(_OtherInput, utility.DAQ):
+    '''    Collects other input data from a CSV file.
+
+    Parameters
+    ----------
+    filepath : string
+        CSV file path.
+    variable_map : dictionary
+        {"Column Header Name" : ("Other Input Variable Name", mpcpy.Units.unit)}.
+
+    Attributes
+    ----------
+    data : dictionary
+        {"Other Input Variable Name" : mpcpy.Variables.Timeseries}.
+    lat : numeric
+        Latitude in degrees.  For timezone.
+    lon : numeric
+        Longitude in degrees.  For timezone.
+    tz_name : string
+        Timezone name.
+    
+    '''
+    
     def __init__(self, csv_filepath, variable_map, **kwargs):
         ''' Constructor of csv other input source.'''
         self.name = 'otherinput_from_csv';
@@ -946,7 +985,8 @@ class OtherInputFromCSV(OtherInput, utility.DAQ):
         self._parse_daq_kwargs(kwargs);
         self._parse_time_zone_kwargs(kwargs);             
                    
-    def collect_data(self, start_time, final_time):
+    def _collect_data(self, start_time, final_time):
+        '''Collect other input data from CSV file.'''
         # Set time interval
         self._set_time_interval(start_time, final_time);
         # Get bulk time series        

@@ -296,7 +296,7 @@ class JModelica(Package, utility.FMU):
         if self.measurement_variable_list:
             for key in self.measurement_variable_list:
                 df = self.Model.measurements[key]['Measured'].get_base_data()[self.Model.start_time:self.Model.final_time].to_frame();
-                df_simtime = self.add_simtime_column(df);
+                df_simtime = self._add_simtime_column(df);
                 mea_traj = np.vstack((df_simtime['SimTime'].get_values(), \
                                      df_simtime[key].get_values()));
                 quad_pen['mpc_model.' + key] = mea_traj;

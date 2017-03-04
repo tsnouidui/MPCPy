@@ -22,7 +22,7 @@ from pyfmi import load_fmu
 #%%
 class mpcpyPandas(object):
     __metaclass__ = ABCMeta;    
-    def mpcpy_ts_list_to_dataframe(self, mpcpy_ts_list, display_data = False):
+    def _mpcpy_ts_list_to_dataframe(self, mpcpy_ts_list, display_data = False):
         '''Combine a number of mpcpy timeseries into one pandas dataframe with base units.'''
         d = {};
         for mpcpy_ts in mpcpy_ts_list:
@@ -37,7 +37,7 @@ class mpcpyPandas(object):
                 d[mpcpy_ts_name].to_frame().to_csv(getMPCPyPath() + '/' + mpcpy_ts_name);
         return df
     
-    def dataframe_to_mpcpy_ts_variable(self, df, key, varname, unit, **kwargs):
+    def _dataframe_to_mpcpy_ts_variable(self, df, key, varname, unit, **kwargs):
         '''Convert a column in a dataframe with datetimeindex to an mpcy timeseries variable.'''
         if 'start_time' in kwargs:
             start_time = kwargs['start_time'];
@@ -57,7 +57,7 @@ class mpcpyPandas(object):
             var = variables.Timeseries(varname, df.loc[start_time:final_time, key], unit, tz_name = self.tz_name);
         return var
      
-    def add_simtime_column(self, df):
+    def _add_simtime_column(self, df):
         '''Add a simulation time column to a dataframe from the DateTimeIndex.'''
         t = df.index.to_series();
         dt = t - t[0];
@@ -136,7 +136,7 @@ class FMU(mpcpyPandas):
                                            input = self.input_object, \
                                            options = self.sim_opts);
         # Retrieve measurements
-        fmu_variable_units = self.get_fmu_variable_units();
+        fmu_variable_units = self._get_fmu_variable_units();
         for key in self.measurements.keys():
             data = self._res[key];
             time = self._res['time'];
@@ -144,7 +144,7 @@ class FMU(mpcpyPandas):
             timeindex = self.start_time_utc + timedelta;
             ts = pd.Series(data = data, index = timeindex);
             ts.name = key;
-            unit = self.get_unit_class_from_fmu_variable_units(key,fmu_variable_units);
+            unit = self._get_unit_class_from_fmu_variable_units(key,fmu_variable_units);
             if not unit:
                 unit = units.unit1;                
             self.measurements[key]['Simulated'] = variables.Timeseries(key, ts, unit);
@@ -193,26 +193,26 @@ class FMU(mpcpyPandas):
 
     def _create_input_object_from_input_mpcpy_ts_list(self, input_mpcpy_ts_list):
         '''Create an input object for a list of mpcpy timeseries for input into fmu.'''
-        self.input_df = self.mpcpy_ts_list_to_dataframe(input_mpcpy_ts_list);
-        self.input_object = self.dataframe_to_input_object(self.input_df[self.start_time_utc:self.final_time_utc]);   
+        self.input_df = self._mpcpy_ts_list_to_dataframe(input_mpcpy_ts_list);
+        self.input_object = self._dataframe_to_input_object(self.input_df[self.start_time_utc:self.final_time_utc]);   
         
-    def dataframe_to_input_object(self, df):
+    def _dataframe_to_input_object(self, df):
         '''Create an input object for an fmu simulated in Jmodelica.'''
         input_names = tuple(df);
-        input_df_simtime = self.add_simtime_column(df);
+        input_df_simtime = self._add_simtime_column(df);
         input_trajectory = input_df_simtime['SimTime'].get_values();
         for header in input_names:
             input_trajectory = np.vstack((input_trajectory, df[header].get_values()));
         input_object = (input_names, np.transpose(input_trajectory));
         return input_object;
                           
-    def get_input_names(self):
+    def _get_input_names(self):
         '''Get the names of the input variables of an fmu.'''
         fmu = load_fmu(self.fmupath);
         input_names = fmu.get_model_variables(include_alias = False, variability = None, causality = 0).keys();
         return input_names;
         
-    def get_fmu_variable_units(self):
+    def _get_fmu_variable_units(self):
         '''Get fmu model variable units.'''
         tmpdir = core.unzip_unit(self.fmupath);
         element_tree = xmlparser._parse_XML(tmpdir+'/modelDescription.xml');
@@ -245,7 +245,7 @@ class FMU(mpcpyPandas):
             
         return fmu_variable_units
     
-    def get_unit_class_from_fmu_variable_units(self, variable_name, fmu_variable_units):
+    def _get_unit_class_from_fmu_variable_units(self, variable_name, fmu_variable_units):
         '''Get mpcpy.unit class for the given variable.'''
         unit_class_items = inspect.getmembers(units);
         unit_class = [];
@@ -340,7 +340,7 @@ class DAQ(object):
             time_headers = self.time_header;
         else:
             time_headers = ['Time', 'time', 'Timestamp', 'timestamp']; 
-        self._df_csv = pd.read_csv(self.location);        
+        self._df_csv = pd.read_csv(self.filepath);        
         for key in self._df_csv.columns.values:
             if key in time_headers:
                 time = pd.to_datetime(self._df_csv[key], format = self.time_format);

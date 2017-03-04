@@ -4,53 +4,9 @@ ExoData
 
 .. automodule:: mpcpy.exodata
 
-Weather
-=======
-
 .. autoclass:: mpcpy.exodata.Weather
 
-Internal
-========
-
-Internal data represents zone heat gains that may come from people, lights, or equipment.  Internal data objects have special methods for sourcing these heat gains from a predicted occupancy model.
-
-Structure
----------
-
-Exogenous internal data has the following organization:
-
-::
-
-    internal.data = {"Zone Name" : {
-                        "Internal Variable Name" : mpcpy.Variables.Timeseries}}
-
-The internal variable names should be chosen from the following list:
-
-- intCon - convective internal load
-- intRad - radiative internal load
-- intLat - latent internal load
-
-The internal variable names input in the model should follow the convention ``internalVariableName_zoneName``.  For example, the convective load input for the zone "west" should have the name ``intCon_west``.
-
-Classes
--------
-
-Internal data may be collected using the following classes:
-
-    InternalFromCSV
-    
-        Collects internal data from a CSV file.  This class requires a variable map to match CSV column headers with internal variable names.  The variable map is a python dictionary of the form: 
-
-::
-
-    variable_map = {"Column Header Name" : ("Zone Name", 
-                                            "Internal Variable Name", 
-                                            mpcpy.Units.unit)}
-\
- 
-    InternalFromOccupancyModel
-    
-        Generates internal load data from an occupancy prediction model.  This class requires a zone list in the form ["Zone Name 1", "Zone Name 2", "Zone Name 3"], a list of numeric values representing the loads per person in the form [Convective, Radiative, Latent] for each zone and collected in a list, the units of the indicated loads from ``mpcpy.Units.unit``, and a list of occupancy model objects with predicted occupancy, one for each zone.
+.. autoclass:: mpcpy.exodata.Internal
 
 
 Control

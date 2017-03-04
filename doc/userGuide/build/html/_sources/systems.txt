@@ -1,5 +1,0 @@
-=======
-Systems
-=======
-
-.. automodule:: mpcpy.systems

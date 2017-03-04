@@ -1,0 +1,200 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Getting Started &mdash; MPCPy User Guide 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MPCPy User Guide 0.1 documentation" href="index.html" />
+    <link rel="next" title="Variables" href="variables.html" />
+    <link rel="prev" title="Introduction" href="introduction.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<p>MPCPy takes advantage of many third-party software packages, listed below.  It has been tested on Ubuntu 16.04.</p>
+<dl class="docutils">
+<dt><strong>Python Packages</strong></dt>
+<dd><ul class="first last simple">
+<li>matplotlib 1.5.1</li>
+<li>numpy 1.11.0</li>
+<li>pandas 0.17.1</li>
+<li>python-dateutil 2.4.2</li>
+<li>pytz 2014.10</li>
+<li>scikit-learn 0.18.1</li>
+<li>tzwhere 2.3</li>
+<li>sphinx 1.3.6</li>
+<li>estimationpy</li>
+</ul>
+</dd>
+<dt><strong>Modelica Compiler and Optimizer, FMU Simulator</strong></dt>
+<dd><ul class="first last simple">
+<li>JModelica 1.17</li>
+</ul>
+</dd>
+<dt><strong>Modelica Packages</strong></dt>
+<dd><ul class="first last simple">
+<li>Modelica Standard Library 3.2.2</li>
+<li>Modelica Buildings Library 3.0.0</li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p class="first">Install all dependencies listed above according to their respective processes.</p>
+</li>
+<li><p class="first">Create the following environmental variables, where &#8221;.../&#8221; is replaced by the full directory:</p>
+<blockquote>
+<div><ul class="simple">
+<li>JMODELICA_HOME        = &#8221;.../Jmodelica-1.17&#8221;</li>
+<li>IPOPT_HOME            = &#8221;.../Ipop-3.12.5&#8221;</li>
+<li>SUNDIALS_HOME         = &#8221;.../Jmodelica-1.17/ThirdParty/Sundials&#8221;</li>
+<li>CPPAD_HOME            = &#8221;.../Jmodelica-1.17/ThirdParty/CppAD/&#8221;</li>
+<li>SEPARATE_PROCESS_JVM  = &#8221;.../jvm/java-8-openjdk-amd64/&#8221;</li>
+<li>JAVA_HOME             = &#8221;.../jvm/java-8-openjdk-amd64/&#8221;</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Add the following to the PYTHONPATH environmental variable, where &#8221;.../&#8221; is replaced by the full directory:</p>
+<blockquote>
+<div><ul class="simple">
+<li>&#8221;.../Jmodelica-1.17/Python&#8221;</li>
+<li>&#8221;.../Jmodelica-1.17/Python/pymodelica&#8221;</li>
+<li>&#8221;.../MPCPy&#8221;</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Add the following to the MODELICAPATH environmental variable:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Modelica Standard Library</li>
+<li>Modelica Buildings Library</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Test the installation and explore MPCPy use-cases by running the unit tests.</p>
+</li>
+</ol>
+</div>
+<div class="section" id="run-unit-tests">
+<h2>Run Unit Tests<a class="headerlink" href="#run-unit-tests" title="Permalink to this headline">¶</a></h2>
+<p>The script bin/runUnitTests.py runs the unit tests of MPCPy.  By default, all of the unit tests are run.  An optional argument -s [module.class] will run only the specified unit tests module or class.</p>
+<p>To run all unit tests from command-line, use the command (shown from the parent directory):</p>
+<blockquote>
+<div><div class="highlight-text"><div class="highlight"><pre>&gt; python bin/runUnitTests
+</pre></div>
+</div>
+</div></blockquote>
+<p>To run only unit tests in the module test_models from command-line, use the command (shown from the parent directory):</p>
+<blockquote>
+<div><div class="highlight-text"><div class="highlight"><pre>&gt; python bin/runUnitTests -s test_models
+</pre></div>
+</div>
+</div></blockquote>
+<p>To run only unit tests in the class Estimate_Jmo from the module test_models from the command-line, use the command (shown from the parent directory):</p>
+<blockquote>
+<div><div class="highlight-text"><div class="highlight"><pre>&gt; python bin/runUnitTests -s test_models.Estimate_Jmo
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Getting Started</a><ul>
+<li><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#run-unit-tests">Run Unit Tests</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="introduction.html" title="previous chapter">Introduction</a></li>
+      <li>Next: <a href="variables.html" title="next chapter">Variables</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/gettingStarted.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, David H. Blum.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/gettingStarted.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

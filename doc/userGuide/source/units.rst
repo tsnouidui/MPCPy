@@ -1,5 +1,3 @@
 =====
 Units
 =====
-
-.. automodule:: mpcpy.units

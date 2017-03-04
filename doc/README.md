@@ -1,10 +1,15 @@
 ## User Guide ##
-Compile the user guide by running from the command line:
+Compile the user guide into a PDF by running from the command line:
 
     > cd userGuide
     > make latex
+    
+Compile the user guide into HTML by running from the command line:
 
-The user guide will be created as a PDF in the resulting build directory.
+    > cd userGuide
+    > make html    
+
+The user guide will be created in the resulting build directory.
 
 
 

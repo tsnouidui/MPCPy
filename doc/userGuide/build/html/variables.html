@@ -1,0 +1,178 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Variables &mdash; MPCPy User Guide 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="MPCPy User Guide 0.1 documentation" href="index.html" />
+    <link rel="next" title="Units" href="units.html" />
+    <link rel="prev" title="Getting Started" href="gettingStarted.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-mpcpy.variables">
+<span id="variables"></span><h1>Variables<a class="headerlink" href="#module-mpcpy.variables" title="Permalink to this headline">¶</a></h1>
+<p>variables.py
+by David Blum</p>
+<p>This module contains the classes and interfaces for the variables of mpcpy.</p>
+<div class="section" id="general">
+<h2>General<a class="headerlink" href="#general" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal"><span class="pre">variables</span></code> and <code class="docutils literal"><span class="pre">units</span></code> modules are the fundamental building blocks of data management in MPCPy.  They provide functionality for assigning and converting between units as well as processing timeseries data.</p>
+<p>Generally speaking, variables in MPCPy contain three components:</p>
+<blockquote>
+<div><p>name</p>
+<blockquote>
+<div>A descriptor of the variable.</div></blockquote>
+<p>data</p>
+<blockquote>
+<div>Constant value or a timeseries.</div></blockquote>
+<p>unit</p>
+<blockquote>
+<div>Assigned to variables and act on the data depending on the requested functionality, such as converting between between units or extracting the data.</div></blockquote>
+</div></blockquote>
+<p>A unit assigned to a variable is called the display unit and is associated with a quantity.  For each quantity, there is a predefined base unit.  The data entered into a variable with a display unit is automatically converted to and stored as the quantity base unit.  This way, if the display unit were to be changed, the data only needs to be converted to the new unit upon extraction.  For example, the unit Degrees Celsius is of the quantity temperature, for which the base unit is Kelvin.  Therefore, data entered with a display unit of Degrees Celsius would be converted to and stored in Kelvin.  If the display unit were to be changed to Degrees Fahrenheit, then the data would be converted from Kelvin upon extraction.</p>
+</div>
+<div class="section" id="instantiation">
+<h2>Instantiation<a class="headerlink" href="#instantiation" title="Permalink to this headline">¶</a></h2>
+<p>Variables are instantiated by defining the variable type and the three components listed in the previous section.  If the data of the variable does not change with time, the variable must be instantiated using the <code class="docutils literal"><span class="pre">variables.Static</span></code> class.  Data supplied to static variable may be a single value, a list, or a numpy array.  If the data of the variable is a timeseries, the variable must be instantiated using the <code class="docutils literal"><span class="pre">variables.Timeseries</span></code> class.  Data supplied to a timeseries variable must be in the form of a pandas series object with a datetime index.  This brings to MPCPy all of the functionality of the pandas package.  The unit assigned is a class chosen from the <code class="docutils literal"><span class="pre">units</span></code> module.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c1"># Instantiate a static variable with units in Degrees Celsius</span>
+<span class="n">var</span> <span class="o">=</span> <span class="n">variables</span><span class="o">.</span><span class="n">Static</span><span class="p">(</span><span class="s1">&#39;var&#39;</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="n">units</span><span class="o">.</span><span class="n">degC</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Timeseries variables have capabilities to manage the the timezone of the data as well as clean the data upon instantiation with the following optional keyword arguments:</p>
+<blockquote>
+<div><p>tz_name</p>
+<blockquote>
+<div>The name of the timezone as defined by <code class="docutils literal"><span class="pre">tzwhere</span></code>.  By default, the UTC timezone is assigned to the data.  If a different timezone is assigned, the data is converted to a stored in UTC.  Similar to the treatment of data units, the timezone is only converted to the assigned timezone upon data extraction.</div></blockquote>
+<p>geography</p>
+<blockquote>
+<div>Tuple containing (latitude,longitude) in degrees.  If geography is defined, the timezone associated with that location will be assigned to the variable.</div></blockquote>
+<p>cleaning_type</p>
+<blockquote>
+<div>The type of cleaning to be performed on the data.  This should be a class selected from <code class="docutils literal"><span class="pre">variables.Timeseries</span></code>.</div></blockquote>
+<p>cleaning_args</p>
+<blockquote>
+<div>Arguments of the cleaning_type defined.</div></blockquote>
+</div></blockquote>
+</div>
+<div class="section" id="variable-management">
+<h2>Variable Management<a class="headerlink" href="#variable-management" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="accessing-data">
+<h3>Accessing Data<a class="headerlink" href="#accessing-data" title="Permalink to this headline">¶</a></h3>
+<p>Data may be extracted from a variable by using the <code class="docutils literal"><span class="pre">display_data()</span></code> and <code class="docutils literal"><span class="pre">get_base_data()</span></code> methods.  The former will extract the data in the assigned unit, while the latter will extract the data in the base unit.</p>
+</div>
+<div class="section" id="setting-display-unit">
+<h3>Setting Display Unit<a class="headerlink" href="#setting-display-unit" title="Permalink to this headline">¶</a></h3>
+<p>The display unit of a variable may be changed using the <code class="docutils literal"><span class="pre">set_display_unit()</span></code> method.  This requires a class of the <code class="docutils literal"><span class="pre">units</span></code> module as an argument.</p>
+</div>
+<div class="section" id="setting-data">
+<h3>Setting Data<a class="headerlink" href="#setting-data" title="Permalink to this headline">¶</a></h3>
+<p>The data of a variable may be changed using the <code class="docutils literal"><span class="pre">set_data()</span></code> method.  This requires a single value or pandas series object as an argument, depending on the variable type.</p>
+</div>
+<div class="section" id="operations">
+<h3>Operations<a class="headerlink" href="#operations" title="Permalink to this headline">¶</a></h3>
+<p>Variables with the same display unit can be added and subtracted using the &#8220;+&#8221; and &#8220;-&#8221; operands.  The result is a third variable with the resulting data, same display unit, and name as &#8220;var1_var2&#8221;.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Variables</a><ul>
+<li><a class="reference internal" href="#general">General</a></li>
+<li><a class="reference internal" href="#instantiation">Instantiation</a></li>
+<li><a class="reference internal" href="#variable-management">Variable Management</a><ul>
+<li><a class="reference internal" href="#accessing-data">Accessing Data</a></li>
+<li><a class="reference internal" href="#setting-display-unit">Setting Display Unit</a></li>
+<li><a class="reference internal" href="#setting-data">Setting Data</a></li>
+<li><a class="reference internal" href="#operations">Operations</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="gettingStarted.html" title="previous chapter">Getting Started</a></li>
+      <li>Next: <a href="units.html" title="next chapter">Units</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/variables.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, David H. Blum.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/variables.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

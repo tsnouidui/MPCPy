@@ -24,29 +24,7 @@ Exogenous weather data has the following organization:
 ``weather.data = {"Weather Variable Name" : mpcpy.Variables.Timeseries}``
 
 The weather variable names should match those input variables in the model 
-and be chosen from the list found in the Weather-Notes_.
-
-Ground temperature is an exception to the data dictionary format due to 
-the possibility of different temperatures at multiple depths. Therefore, 
-the dictionary format for ground temperature is:
-
-``weather.data["weaTGnd"] = {"Depth" : mpcpy.Variables.Timeseries}``
- 
-Classes
-=======
-
-.. autoclass:: mpcpy.exodata.WeatherFromEPW
-    :members: collect_data, display_data, get_base_data
-
-.. autoclass:: mpcpy.exodata.WeatherFromCSV
-    :members: collect_data, display_data, get_base_data
-
-.. _Weather-Notes:
-
-Weather Notes
-=============
-
-Weather variable name list:
+and be chosen from the list found in the following list:
 
 - weaPAtm - atmospheric pressure
 - weaTDewPoi - dew point temperature
@@ -72,6 +50,21 @@ Weather variable name list:
 - weaSolTim - solar time
 - weaTGnd - ground temperature
 
+Ground temperature is an exception to the data dictionary format due to 
+the possibility of different temperatures at multiple depths. Therefore, 
+the dictionary format for ground temperature is:
+
+``weather.data["weaTGnd"] = {"Depth" : mpcpy.Variables.Timeseries}``
+ 
+Classes
+=======
+
+.. autoclass:: mpcpy.exodata.WeatherFromEPW
+    :members: collect_data, display_data, get_base_data
+
+.. autoclass:: mpcpy.exodata.WeatherFromCSV
+    :members: collect_data, display_data, get_base_data
+
 
 ========   
 Internal
@@ -84,8 +77,13 @@ the following organization:
 
 ``internal.data = {"Zone Name" : {"Internal Variable Name" : mpcpy.Variables.Timeseries}}``
 
-The internal variable names should be chosen from the list in the 
-Internal-Notes_.  The input names in the model should follow the convention 
+The internal variable names should be chosen from the following list:
+
+- intCon - convective internal load
+- intRad - radiative internal load
+- intLat - latent internal load
+
+The input names in the model should follow the convention 
 ``internalVariableName_zoneName``.  For example, the convective load input 
 for the zone "west" should have the name ``intCon_west``.
 
@@ -98,17 +96,6 @@ Classes
 .. autoclass:: mpcpy.exodata.InternalFromOccupancyModel
     :members: collect_data, display_data, get_base_data
     
-.. _Internal-Notes:
-
-Internal Notes
-==============
-
-Internal variable name list:
-
-- intCon - convective internal load
-- intRad - radiative internal load
-- intLat - latent internal load
-
 
 =======
 Control
@@ -147,7 +134,88 @@ Classes
 
 .. autoclass:: mpcpy.exodata.OtherInputFromCSV
     :members: collect_data, display_data, get_base_data
+    
+=====
+Price
+=====
 
+Price data represents price signals from utility or district energy systems 
+for things such as energy consumption, demand, or other services.  Price data 
+object variables are special because they are used for optimization objective 
+functions involving price signals.  Exogenous price data has the following 
+organization:
+
+``price.data = {"Price Variable Name" : mpcpy.Variables.Timeseries}``
+
+The price variable names should be chosen from the following list:
+
+- pi_e - electrical energy price
+
+Classes
+=======
+
+.. autoclass:: mpcpy.exodata.PriceFromCSV
+    :members: collect_data, display_data, get_base_data
+
+
+===========
+Constraints
+===========
+
+Constraint data represents limits to which the control and state variables of 
+an optimization solution must abide.  Constraint data object variables are 
+included in the optimization problem formulation.  Exogenous constraint data 
+has the following organization:
+
+``{"State or Control Variable Name" : {"Constraint Variable Type" : mpcpy.Variables.Timeseries/Static}}``
+
+The state or control variable name must match those that are in the model.  
+The constraint variable types should be chosen from the following list:
+
+- LTE - less than or equal to (Timeseries)
+- GTE - greater than or equal to (Timeseries)
+- E - equal to (Timeseries)
+- Initial - initial value (Static)
+- Final - final value (Static)
+- Cyclic - initial value equals final value (Static - Boolean)
+
+Classes
+=======
+
+.. autoclass:: mpcpy.exodata.ConstraintFromCSV
+    :members: collect_data, display_data, get_base_data 
+    
+.. autoclass:: mpcpy.exodata.ConstraintFromOccupancyModel
+    :members: collect_data, display_data, get_base_data     
+
+
+==========
+Parameters
+==========
+
+Parameter data represents inputs or coefficients of models that do not change 
+with time during a simulation, which may need to be learned using system 
+measurement data. Parameter data object variables are set when simulating 
+models, and are estimated using model learning techniques if flagged to do so.
+Exogenous parameter data has the following organization:
+
+{"Parameter Name" : {"Parameter Variable Name" : mpcpy.Variables.Static}}
+
+The parameter name must match that which is in the model.  The parameter 
+variable names should be chosen from the following list:
+
+- Free - boolean flag for inclusion in model learning algorithms
+- Value - value of the parameter, which is also used as an initial guess for model learning algorithms
+- Minimum - minimum value of the parameter for model learning algorithms
+- Maximum - maximum value of the parameter for model learning algorithms
+- Covariance - covariance of the parameter for model learning algorithms
+
+Classes
+=======
+
+.. autoclass:: mpcpy.exodata.ParameterFromCSV
+    :members: collect_data, display_data, get_base_data 
+    
 """
 
 from abc import ABCMeta
@@ -454,80 +522,12 @@ class _OtherInput(_Type):
                                                                  cleaning_type = self._cleaning_type, \
                                                                  cleaning_args = self._cleaning_args);
                                                                  
-## Parameters       
-class Parameter(_Type):
-    '''Interface for obtaining coefficient-related Exogenous data from a source.    
-        An object with an CoefficientType interface must gather coefficient data.
-        
-        To standardize data transfer within mpcpy, the returned coefficient data 
-        should be saved into a dictionary with the following format:   
-        
-        {
-        “ParameterName” : {
-            "Free" : Static mpcpy.Variable,            
-            "Value" : Static mpcpy.Variable,
-            "Minimum" : Static mpcpy.Variable,
-            “Maximum” : Static mpcpy.Variable,
-            "Covariance" : Static mpcpy.Variable
-        }   
-        
-        '''
-        
-    def display_data(self):
-        '''Display data as pandas dataframe.'''
-        d = {};
-        for key in self.data.keys():
-            d[key] = {};
-            for subkey in self.data[key].keys():
-                d[key][subkey] = self.data[key][subkey].display_data();
-                if subkey == 'Value':
-                    d[key]['Unit'] = self.data[key][subkey].get_display_unit_name();
-        df_coefficients = pd.DataFrame(data = d).transpose();
-        df_coefficients.index.name = 'Name';
-        return df_coefficients;
-        
-    def get_base_data(self):
-        '''Get base data as pandas dataframe.'''
-        d = {};
-        for key in self.data.keys():
-            d[key] = {};
-            for subkey in self.data[key].keys():
-                d[key][subkey] = self.data[key][subkey].get_base_data();
-        df_coefficients = pd.DataFrame(data = d);
-        return df_coefficients;    
-        
 ## Constraints       
-class Constraint(_Type):
-    '''Interface for obtaining constraint-related Exogenous data from a source.
-        An object with an ConstraintType interface must gather constraint data.
-        
-        To standardize data transfer within mpcpy, the returned constraint data 
-        should be saved into a dictionary with the following format:   
-        
-        {
-        “StateName” : {
-            "LTE" : Timeseries mpcpy.Variable,
-            "GTE" : Timeseries mpcpy.Variable,
-            "E" : Timeseries mpcpy.Variable,
-            "Initial" : Static mpcpy.Variable,
-            "Final" : Static mpcpy.Variable,
-            "Cyclic" : Static mpcpy.Variable,             
-        }   
-        
-        '''
-    def display_data(self):
-        '''Display data as pandas dataframe.'''
-        self._make_mpcpy_ts_list();
-        df_internal = self._mpcpy_ts_list_to_dataframe(self._ts_list, display_data = True);
-        return df_internal;
-        
-    def get_base_data(self):
-        '''Get base data as pandas dataframe.'''
-        self._make_mpcpy_ts_list();        
-        df_internal = self._mpcpy_ts_list_to_dataframe(self._ts_list, display_data = False);
-        return df_internal;  
+class _Constraint(_Type):
+    '''Mixin class for constraint data.'''
         
     def _make_mpcpy_ts_list(self):
+        '''Make mpcpy timeseries list.'''
         self._ts_list = [];
         for state in self.data.keys():
             for key in self.data[state].keys():
@@ -550,49 +550,74 @@ class Constraint(_Type):
             self.data[state][key] = self._dataframe_to_mpcpy_ts_variable(self._df_csv, self._key, varname, unit, \
                                                                        start_time=self.start_time, final_time=self.final_time, \
                                                                        cleaning_type = self._cleaning_type, \
-                                                                       cleaning_args = self._cleaning_args);        
-        
- 
-## Prices       
-class Price(_Type):
-    '''Interface for obtaining price-related Exogenous data from a source.
-        An object with an PriceType interface must gather price data.
-        
-        To standardize data transfer within mpcpy, the returned control data 
-        should be saved into a dictionary with the following format:   
-        
-        {
-        “PriceName” : Timeseries mpcpy.Variable          
-        }   
-        
-        '''
+                                                                       cleaning_args = self._cleaning_args);
 
-    def display_data(self):
-        '''Display data as pandas dataframe.'''
-        self._make_mpcpy_ts_list();
-        df_weather = self._mpcpy_ts_list_to_dataframe(self._ts_list, display_data = True);
-        return df_weather;
-        
-    def get_base_data(self):
-        '''Get base data as pandas dataframe.'''
-        self._make_mpcpy_ts_list();        
-        df_weather = self._mpcpy_ts_list_to_dataframe(self._ts_list, display_data = False);
-        return df_weather;
+
+## Prices       
+class _Price(_Type):
+    '''Mixin class for price data.'''
         
     def _make_mpcpy_ts_list(self):
+        '''Make mpcpy timeseries list.'''
         self._ts_list = [];
         for key in self.data.keys():
             if self.data[key].variability == 'Timeseries':
-                self._ts_list.append(self.data[key]);        
-           
+                self._ts_list.append(self.data[key]);
+
     def _translate_variable_map(self):
         '''Translate csv column to data variable.'''
         varname = self.variable_map[self._key][0];
-        unit = self.variable_map[self._key][1];        
+        unit = self.variable_map[self._key][1];
         self.data[varname] = self._dataframe_to_mpcpy_ts_variable(self._df_csv, self._key, varname, unit, \
                                                                  start_time=self.start_time, final_time=self.final_time, \
                                                                  cleaning_type = self._cleaning_type, \
-                                                                 cleaning_args = self._cleaning_args);        
+                                                                 cleaning_args = self._cleaning_args);
+
+
+## Parameters       
+class _Parameter(_Type):
+    '''Mixin class for parameter data.'''
+
+    def display_data(self):
+        '''Display data as pandas dataframe.
+
+        Returns
+        -------
+
+        df : ``pandas`` dataframe
+            Dataframe in display units.
+            
+        '''
+
+        d = {};
+        for key in self.data.keys():
+            d[key] = {};
+            for subkey in self.data[key].keys():
+                d[key][subkey] = self.data[key][subkey].display_data();
+                if subkey == 'Value':
+                    d[key]['Unit'] = self.data[key][subkey].get_display_unit_name();
+        df_coefficients = pd.DataFrame(data = d).transpose();
+        df_coefficients.index.name = 'Name';
+        return df_coefficients;
+
+    def get_base_data(self):
+        '''Get base data as pandas dataframe.
+
+        Returns
+        -------
+
+        df : ``pandas`` dataframe
+            Dataframe in base units.
+
+        '''
+
+        d = {};
+        for key in self.data.keys():
+            d[key] = {};
+            for subkey in self.data[key].keys():
+                d[key][subkey] = self.data[key][subkey].get_base_data();
+        df_coefficients = pd.DataFrame(data = d);
+        return df_coefficients;
    
 #%% Weather source implementations    
 class WeatherFromEPW(_Weather):
@@ -889,6 +914,7 @@ class InternalFromOccupancyModel(_Internal):
         Timezone name.        
 
     '''
+    
     def __init__(self, zone_list, load_list, unit, occupancy_model_list, **kwargs):
         '''Constructor of occupancy model internal source.'''
         self.zone_list = zone_list;
@@ -934,6 +960,7 @@ class ControlFromCSV(_Control, utility.DAQ):
         Timezone name.        
 
     '''
+    
     def __init__(self, filepath, variable_map, **kwargs):
         ''' Constructor of csv control source.'''
         self.filepath = filepath;
@@ -952,7 +979,8 @@ class ControlFromCSV(_Control, utility.DAQ):
         
 #%% Other input source implementations        
 class OtherInputFromCSV(_OtherInput, utility.DAQ):
-    '''    Collects other input data from a CSV file.
+    '''
+    Collects other input data from a CSV file.
 
     Parameters
     ----------
@@ -992,15 +1020,174 @@ class OtherInputFromCSV(_OtherInput, utility.DAQ):
         # Get bulk time series        
         self._read_timeseries_from_csv();        
         
+           
+#%% Constraint source implementations
+class ConstraintFromCSV(_Constraint, utility.DAQ):
+    '''
+    Collects constraint data from a CSV file.
+
+    Parameters
+    ----------
+    filepath : string
+        CSV file path.
+    variable_map : dictionary
+        {"State or Control Variable Name" : {"Constraint Variable Name" : mpcpy.Variables.Timeseries/Static}}.
+
+    Attributes
+    ----------
+    data : dictionary
+        {"Column Header Name" : ("State or Control Variable Name", "Constraint Variable Type", mpcpy.Units.unit)}.
+    lat : numeric
+        Latitude in degrees.  For timezone.
+    lon : numeric
+        Longitude in degrees.  For timezone.
+    tz_name : string
+        Timezone name.
+    
+    '''
+    
+    def __init__(self, filepath, variable_map, **kwargs):
+        ''' Constructor of csv constraint source.'''
+        self.filepath = filepath;
+        self.data = {};
+        self.variable_map = variable_map;
+        # Common kwargs
+        self._parse_daq_kwargs(kwargs);
+        self._parse_time_zone_kwargs(kwargs);
+            
+    def _collect_data(self, start_time, final_time):
+        '''Collect constraint data from CSV file.'''
+        # Set time interval
+        self._set_time_interval(start_time, final_time);
+        # Get bulk time series        
+        self._read_timeseries_from_csv();
+        
+class ConstraintFromOccupancyModel(_Constraint):
+    '''
+    Collects constraint data from an occupancy model.
+
+    Parameters
+    ----------
+    state_variable_list : [string]
+        List of variable names to be constrained.  States with multiple constraints should be listed once for each constraint type.
+    values_list : [[numeric or boolean, numeric or boolean]]
+        List of values for [Occupied, Unoccupied] corresponding to state_variable_list.
+    constraint_type_list : [string]
+        List of contraint variable types corresponding to state_variable_list. 
+    unit_list : [mpcpy.Units.unit]
+        List of units corresponding to each contraint type in constraint_type_list.
+    occupancy_model : mpcpy.Models.Occupancy
+        Occupancy model object to use.   
+    
+
+    Attributes
+    ----------
+    data : dictionary
+        {"State or Control Variable Name" : {"Constraint Variable Type" : mpcpy.Variables.Timeseries/Static}}.
+    lat : numeric
+        Latitude in degrees.  For timezone.
+    lon : numeric
+        Longitude in degrees.  For timezone.
+    tz_name : string
+        Timezone name.        
+
+    '''
+    def __init__(self, state_variable_list, values_list, constraint_type_list, unit_list, occupancy_model, **kwargs):
+        '''Constructor of occupancy model constraint source.'''
+        self.state_variable_list = state_variable_list;
+        self.values_list = values_list;
+        self.constraint_type_list = constraint_type_list;
+        self.unit_list = unit_list;
+        self.occupancy_model = occupancy_model;
+        self.data = {};        
+        # Common kwargs
+        self._parse_time_zone_kwargs(kwargs);
+        
+    def _collect_data(self, start_time, final_time):
+        '''Collect constraint data from occupancy model.'''
+        # Set time interval
+        self._set_time_interval(start_time, final_time);
+        # Get bulk time series
+        for state_variable, values, constraint_type, unit in zip(self.state_variable_list, self.values_list, self.constraint_type_list, self.unit_list):
+            if state_variable not in self.data:
+                self.data[state_variable] = {};
+            ts = self.occupancy_model.generate_constraint(values[0], values[1]);
+            self.data[state_variable][constraint_type] = variables.Timeseries(state_variable+'_'+constraint_type, ts[self.start_time:self.final_time], unit);
+
+#%% Price source implementations
+class PriceFromCSV(_Price, utility.DAQ):
+    '''Collects price data from a CSV file.
+
+    Parameters
+    ----------
+    filepath : string
+        CSV file path.
+    variable_map : dictionary
+        {"Column Header Name" : ("Price Variable Name", mpcpy.Units.unit)}.
+
+    Attributes
+    ----------
+    data : dictionary
+        {"Price Variable Name" : mpcpy.Variables.Timeseries}.
+    lat : numeric
+        Latitude in degrees.  For timezone.
+    lon : numeric
+        Longitude in degrees.  For timezone.
+    tz_name : string
+        Timezone name.
+    
+    '''        
+
+    def __init__(self, filepath, variable_map, **kwargs):
+        ''' Constructor of csv price source.'''
+        self.name = 'constraint_from_csv';
+        self.filepath = filepath;
+        self.data = {};   
+        self.variable_map = variable_map;
+        # Common kwargs
+        self._parse_daq_kwargs(kwargs);
+        self._parse_time_zone_kwargs(kwargs);
+            
+    def _collect_data(self, start_time, final_time):
+        '''Collect price data from a csv file.'''
+        # Set time interval
+        self._set_time_interval(start_time, final_time);
+        # Get bulk time series        
+        self._read_timeseries_from_csv();
+
+
 #%% Parameter source implementations 
-class ParameterFromCSV(Parameter, utility.DAQ):
-    '''A parameter source interface for csv file data source.'''
-    def __init__(self, csv_filepath):
-        ''' Constructor of csv parameter source.'''
-        self.name = 'parameter_from_csv';
-        self.filepath = csv_filepath;
+class ParameterFromCSV(_Parameter, utility.DAQ):
+    '''
+    Collects parameter data from a CSV file. The CSV file rows must be named 
+    as the parameter names and the columns must be named as the parameter 
+    variable names.
+
+    Parameters
+    ----------
+    filepath : string
+        CSV file path.
+
+    Attributes
+    ----------
+    data : dictionary
+        {"Parameter Name" : {"Parameter Variable Name" : mpcpy.Variables.Static}}.
+    
+    '''
+    def __init__(self, filepath):
+        ''' Constructor of csv parameter data source.'''
+        self.filepath = filepath;
         self.data = {};
     def collect_data(self):
+        '''Collect parameter data from CSV file.
+        
+        Yields
+        ------
+        
+        data : dictionary
+            Data attribute.
+            
+        '''
         # Read coefficients file
         df = pd.read_csv(self.filepath, index_col='Name', dtype={'Unit':str});
         # Create coefficient dictionary
@@ -1015,70 +1202,4 @@ class ParameterFromCSV(Parameter, utility.DAQ):
                 self.data[key]['Covariance'] = variables.Static(key+'_cov', df.loc[key, 'Covariance'], unit);
             else: 
                 self.data[key]['Free'] = variables.Static(key+'_free', False, units.boolean);
-                self.data[key]['Value'] = variables.Static(key+'_val', df.loc[key, 'Value'], unit);              
-            
-#%% Constraint source implementations
-class ConstraintFromCSV(Constraint, utility.DAQ):
-    '''A constraint source interface for csv file data source.'''
-    def __init__(self, csv_filepath, variable_map, **kwargs):
-        ''' Constructor of csv constraint source.'''
-        self.name = 'constraint_from_csv';
-        self.filepath = csv_filepath;
-        self.data = {};   
-        # Dictionary of format {'csvHeader' : (stateVarName, 'key', mpcpyUnit)}
-        self.variable_map = variable_map;
-        # Common kwargs
-        self._parse_daq_kwargs(kwargs);
-        self._parse_time_zone_kwargs(kwargs);
-            
-    def collect_data(self, start_time, final_time):
-        # Set time interval
-        self._set_time_interval(start_time, final_time);
-        # Get bulk time series        
-        self._read_timeseries_from_csv();
-        
-class ConstraintFromOccupancyModel(Constraint):
-    '''A constraint source interface for occupancy model data source.'''
-    def __init__(self, state_variable_list, values_list, constraint_type_list, unit_list, occupancy_model, **kwargs):
-        '''Constructor of occupancy model constraint source.'''
-        self.name = 'constraint_from_occupancymodel';
-        self.state_variable_list = state_variable_list;
-        self.values_list = values_list;
-        self.constraint_type_list = constraint_type_list;
-        self.unit_list = unit_list;
-        self.occupancy_model = occupancy_model;
-        self.data = {};        
-        # Common kwargs
-        self._parse_time_zone_kwargs(kwargs);
-        
-    def collect_data(self, start_time, final_time):
-        # Set time interval
-        self._set_time_interval(start_time, final_time);
-        # Get bulk time series
-        for state_variable, values, constraint_type, unit in zip(self.state_variable_list, self.values_list, self.constraint_type_list, self.unit_list):
-            if state_variable not in self.data:
-                self.data[state_variable] = {};
-            ts = self.occupancy_model.generate_constraint(values[0], values[1]);
-            self.data[state_variable][constraint_type] = variables.Timeseries(state_variable+'_'+constraint_type, ts[self.start_time:self.final_time], unit);
-
-#%% Price source implementations
-class PriceFromCSV(Price, utility.DAQ):
-    '''A price source interface for csv file data source.'''
-    def __init__(self, csv_filepath, variable_map, **kwargs):
-        ''' Constructor of csv internal source.'''
-        self.name = 'constraint_from_csv';
-        self.filepath = csv_filepath;
-        self.data = {};   
-        # Dictionary of format {'csvHeader' : (priceVarName, 'key', mpcpyUnit)}
-        self.variable_map = variable_map;
-        # Common kwargs
-        self._parse_daq_kwargs(kwargs);
-        self._parse_time_zone_kwargs(kwargs);
-            
-    def collect_data(self, start_time, final_time):
-        # Set time interval
-        self._set_time_interval(start_time, final_time);
-        # Get bulk time series        
-        self._read_timeseries_from_csv();                
-        
-        
+                self.data[key]['Value'] = variables.Static(key+'_val', df.loc[key, 'Value'], unit);             

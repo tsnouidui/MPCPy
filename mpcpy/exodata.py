@@ -167,7 +167,7 @@ an optimization solution must abide.  Constraint data object variables are
 included in the optimization problem formulation.  Exogenous constraint data 
 has the following organization:
 
-``{"State or Control Variable Name" : {"Constraint Variable Type" : mpcpy.Variables.Timeseries/Static}}``
+``constraints.data = {"State or Control Variable Name" : {"Constraint Variable Type" : mpcpy.Variables.Timeseries/Static}}``
 
 The state or control variable name must match those that are in the model.  
 The constraint variable types should be chosen from the following list:

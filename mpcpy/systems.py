@@ -159,7 +159,7 @@ class EmulationFromFMU(_Emulation, utility.FMU):
         '''Constructor of system emulation by FMU.'''
         self.fmupath = fmupath;
         self.measurements = measurements
-        self.input_names = self.get_input_names();        
+        self.input_names = self._get_input_names();        
         self._parse_building_kwargs(kwargs);
         self._parse_time_zone_kwargs(kwargs);
         

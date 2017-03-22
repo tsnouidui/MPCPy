@@ -101,23 +101,24 @@ class Timeseries(unittest.TestCase):
         '''Test setting the name.'''
         self.var.name = 'var2';
         self.assertEqual(self.var.name, 'var2');
-    def test_display_time_zone(self):
-        '''Test that the default time zone is UTC.'''
-        # Time zone by tz_name
+    def test_time_zone_default(self):
+        '''Test default time zone.'''
         self.var = variables.Timeseries('var1', self.dataC_pd, units.degC);
         for i in range(len(self.dataC)):
             self.assertEqual(self.var.get_base_data().index[i], self.time[i].tz_localize('UTC'));
             self.assertEqual(self.var.display_data().index[i], self.time[i].tz_localize('UTC'));
+    def test_time_zone_tz_name(self):
+        '''Test time zone by tz_name.'''
         self.var = variables.Timeseries('var1', self.dataC_pd, units.degC, tz_name = 'America/Los_Angeles');
         for i in range(len(self.dataC)):
             self.assertEqual(self.var.get_base_data().index[i], self.time[i].tz_localize('UTC')+relativedelta(hours = 8));
             self.assertEqual(self.var.display_data().index[i], self.time[i].tz_localize('UTC')+relativedelta(hours = 8));  
-        # Time zone by geography
+    def test_time_zone_geography(self):
+        '''Test time zone by geography.'''
         self.var = variables.Timeseries('var1', self.dataC_pd, units.degC, geography = [41.8781, -87.6298]);
         for i in range(len(self.dataC)):
             self.assertEqual(self.var.get_base_data().index[i], self.time[i].tz_localize('UTC')+relativedelta(hours = 6));
-            self.assertEqual(self.var.display_data().index[i], self.time[i].tz_localize('UTC')+relativedelta(hours = 6));         
-        
+            self.assertEqual(self.var.display_data().index[i], self.time[i].tz_localize('UTC')+relativedelta(hours = 6));
         
 class Operations_Static(unittest.TestCase):
     '''Tests for static addition and subtraction.'''

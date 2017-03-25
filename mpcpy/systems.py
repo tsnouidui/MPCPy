@@ -61,17 +61,28 @@ from mpcpy import utility
 
 #%% System class
 class _System(utility.mpcpyPandas, utility.Building):
-    '''Abstract class for representing systems.'''  
+    '''Base class for representing systems.
+
+    '''  
+
     __metaclass__ = ABCMeta;
+    
     @abstractmethod
     def collect_measurements():
-        '''Collect system measurements from the specified source.'''
+        '''Collect system measurements from the specified source.
+
+        '''
+
         pass;
-        
+
 #%% System implementations
 class _Emulation(_System):
-    '''Emulated system.'''
+    '''Base class for an emulated system class.
+
+    '''
+
     __metaclass__ = ABCMeta;
+
     def collect_measurements(self, start_time, final_time):
         '''Simulate model and collect measurement data for the emulated system.
         
@@ -96,8 +107,12 @@ class _Emulation(_System):
             self.measurements[key]['Measured'] = self.measurements[key]['Simulated']; 
 
 class _Real(_System):
-    '''Real system.'''
+    '''Base class for a real system.
+
+    '''
+
     __metaclass__ = ABCMeta;
+
     def collect_measurements(self, start_time, final_time):
         '''Search for and collect measurement data for the real system.
         
@@ -152,11 +167,14 @@ class EmulationFromFMU(_Emulation, utility.FMU):
         Longitude in degrees.  For timezone.
     tz_name : string
         Timezone name.
-    
+
     '''
-    
+
     def __init__(self, fmupath, measurements, **kwargs):
-        '''Constructor of system emulation by FMU.'''
+        '''Constructor of system emulation by FMU.
+
+        '''
+
         self.fmupath = fmupath;
         self.measurements = measurements
         self.input_names = self._get_input_names();        
@@ -164,7 +182,10 @@ class EmulationFromFMU(_Emulation, utility.FMU):
         self._parse_time_zone_kwargs(kwargs);
         
     def _simulate(self):
-        '''Simulate the fmu.'''
+        '''Simulate the fmu.
+
+        '''
+
         self._simulate_fmu();
         
 class RealFromCSV(_Real, utility.DAQ):
@@ -205,7 +226,10 @@ class RealFromCSV(_Real, utility.DAQ):
     '''
     
     def __init__(self, filepath, measurements, variable_map, **kwargs):
-        ''' Constructor of system measured data located in CSV.'''
+        ''' Constructor of system measured data located in CSV.
+
+        '''
+
         self.filepath = filepath;
         self.measurements = measurements;
         self.variable_map = variable_map;
@@ -213,11 +237,17 @@ class RealFromCSV(_Real, utility.DAQ):
         self._parse_time_zone_kwargs(kwargs);
         
     def _collect_data(self):
-        '''Collect measurement data from csv.'''
+        '''Collect measurement data from csv.
+
+        '''
+
         self._read_timeseries_from_csv();
 
     def _translate_variable_map(self):
-        '''Translate csv column to measurement variable.'''
+        '''Translate csv column to measurement variable.
+
+        '''
+
         varname = self.variable_map[self._key][0];
         unit = self.variable_map[self._key][1];
         self.measurements[varname]['Measured'] = self._dataframe_to_mpcpy_ts_variable(self._df_csv, self._key, varname, unit, \

@@ -230,7 +230,10 @@ from mpcpy import variables
      
 #%% Abstract source interface class
 class _Type(utility.mpcpyPandas):
-    '''Base class for exogenous data sources.'''
+    '''Base class for exogenous data sources.
+    
+    '''
+
     __metaclass__ = ABCMeta;
     
     def collect_data(self, start_time=None, final_time=None):
@@ -266,6 +269,7 @@ class _Type(utility.mpcpyPandas):
         
         self._make_mpcpy_ts_list();
         df = self._mpcpy_ts_list_to_dataframe(self._ts_list, display_data = True);
+        
         return df;
         
     def get_base_data(self):
@@ -281,23 +285,32 @@ class _Type(utility.mpcpyPandas):
         
         self._make_mpcpy_ts_list();        
         df = self._mpcpy_ts_list_to_dataframe(self._ts_list, display_data = False);
+        
         return df;
                
 #%% Source implementations
 
 ## Weather       
 class _Weather(_Type, utility.FMU):
-    '''Mixin class for weather data.'''
+    '''Mixin class for weather data.
+    
+    '''
         
     def _make_mpcpy_ts_list(self):
-        '''Make mpcpy timeseries list.'''
+        '''Make mpcpy timeseries list.
+        
+        '''
+
         self._ts_list = [];
         for key in self.data.keys():
             if self.data[key].variability == 'Timeseries':
                 self._ts_list.append(self.data[key]);        
            
     def _translate_variable_map(self):
-        '''Translate csv column to data variable.'''
+        '''Translate csv column to data variable.
+        
+        '''
+
         varname = self.variable_map[self._key][0];
         unit = self.variable_map[self._key][1];        
         self.data[varname] = self._dataframe_to_mpcpy_ts_variable(self._df_csv, self._key, varname, unit, \
@@ -311,6 +324,7 @@ class _Weather(_Type, utility.FMU):
         See Buildings.BoundaryConditions.WeatherData.ReaderTMY3.
         
         '''
+
         var = self.data['weaCelHei'];
         ts_in = var.get_base_data();
         M_in = ts_in.get_values();     
@@ -331,6 +345,7 @@ class _Weather(_Type, utility.FMU):
         See Buildings.BoundaryConditions.WeatherData.ReaderTMY3.
         
         '''
+
         var = self.data['weaPAtm'];
         index = var.get_base_data().index;
         M_in = var.get_base_data().get_values();
@@ -346,6 +361,7 @@ class _Weather(_Type, utility.FMU):
         See Buildings.BoundaryConditions.WeatherData.ReaderTMY3.
         
         '''
+
         var = self.data['weaNOpa'];
         ts_in = var.get_base_data();
         M_in = ts_in.get_values();     
@@ -370,6 +386,7 @@ class _Weather(_Type, utility.FMU):
         See Buildings.BoundaryConditions.WeatherData.ReaderTMY3.
         
         '''
+
         var = self.data['weaNTot'];
         ts_in = var.get_base_data();
         M_in = ts_in.get_values();  
@@ -394,6 +411,7 @@ class _Weather(_Type, utility.FMU):
         See Buildings.BoundaryConditions.WeatherData.ReaderTMY3.
         
         '''
+
         var = self.data['weaRelHum'];
         ts_in = var.get_base_data();
         M_in = ts_in.get_values();
@@ -413,8 +431,10 @@ class _Weather(_Type, utility.FMU):
         self.data['weaRelHum'] = var;
         
     def _process_weather_data(self):
-        '''Use process weather fmu to calculate other necessary weather data.'''
+        '''Use process weather fmu to calculate other necessary weather data.
         
+        '''
+
         # Set filepath for fmu
         weatherdir = utility.get_MPCPy_path() + '/resources/weather';
         fmuname = 'RapidMPC_BoundaryConditions_WeatherProcessor.fmu';
@@ -443,6 +463,10 @@ class _Weather(_Type, utility.FMU):
             self.data[key] = self.measurements[key]['Simulated'];
 
     def _create_input_mpcpy_ts_list_sim(self):
+        '''Create the input list of mpcpy variables for an fMU simulation.
+
+        '''
+
         # Set input_object for fmu
         self._input_mpcpy_ts_list = (self.data['weaPAtm'], self.data['weaTDewPoi'], \
                                      self.data['weaTDryBul'], self.data['weaRelHum'], \
@@ -453,10 +477,15 @@ class _Weather(_Type, utility.FMU):
         
 ## Internal       
 class _Internal(_Type):
-    '''Mixin class for internal data.'''
-        
+    '''Mixin class for internal data.
+
+    '''
+
     def _make_mpcpy_ts_list(self):
-        '''Make mpcpy timeseries list.'''        
+        '''Make mpcpy timeseries list.
+
+        '''        
+
         self._ts_list = [];
         for zone in self.data.keys():
             for key in self.data[zone].keys():
@@ -464,7 +493,10 @@ class _Internal(_Type):
                     self._ts_list.append(self.data[zone][key]);
         
     def _translate_variable_map(self):
-        '''Translate csv column to data variable.'''
+        '''Translate csv column to data variable.
+
+        '''
+
         zone = self.variable_map[self._key][0];
         load = self.variable_map[self._key][1];
         varname = load + '_' + zone;
@@ -484,17 +516,25 @@ class _Internal(_Type):
          
 ## Controls       
 class _Control(_Type):
-    '''Mixin class for control data.'''
-        
+    '''Mixin class for control data.
+
+    '''
+
     def _make_mpcpy_ts_list(self):
-        '''Make mpcpy timeseries list.'''
+        '''Make mpcpy timeseries list.
+
+        '''
+
         self._ts_list = [];
         for key in self.data.keys():
             if self.data[key].variability == 'Timeseries':
                 self._ts_list.append(self.data[key]);        
            
     def _translate_variable_map(self):
-        '''Translate csv column to data variable.'''
+        '''Translate csv column to data variable.
+
+        '''
+
         varname = self.variable_map[self._key][0];
         unit = self.variable_map[self._key][1];        
         self.data[varname] = self._dataframe_to_mpcpy_ts_variable(self._df_csv, self._key, varname, unit, \
@@ -504,17 +544,25 @@ class _Control(_Type):
                                                                  
 ## Other_Inputs       
 class _OtherInput(_Type):
-    '''Mixin class for other input data.'''
-       
+    '''Mixin class for other input data.
+
+    '''
+
     def _make_mpcpy_ts_list(self):
-        '''Make mpcpy timeseries list.'''
+        '''Make mpcpy timeseries list.
+
+        '''
+
         self._ts_list = [];
         for key in self.data.keys():
             if self.data[key].variability == 'Timeseries':
                 self._ts_list.append(self.data[key]);        
            
     def _translate_variable_map(self):
-        '''Translate csv column to data variable.'''
+        '''Translate csv column to data variable.
+
+        '''
+
         varname = self.variable_map[self._key][0];
         unit = self.variable_map[self._key][1];        
         self.data[varname] = self._dataframe_to_mpcpy_ts_variable(self._df_csv, self._key, varname, unit, \
@@ -524,10 +572,15 @@ class _OtherInput(_Type):
                                                                  
 ## Constraints       
 class _Constraint(_Type):
-    '''Mixin class for constraint data.'''
-        
+    '''Mixin class for constraint data.
+
+    '''
+
     def _make_mpcpy_ts_list(self):
-        '''Make mpcpy timeseries list.'''
+        '''Make mpcpy timeseries list.
+
+        '''
+
         self._ts_list = [];
         for state in self.data.keys():
             for key in self.data[state].keys():
@@ -535,7 +588,10 @@ class _Constraint(_Type):
                     self._ts_list.append(self.data[state][key]);
         
     def _translate_variable_map(self):
-        '''Translate csv column to data variable.'''
+        '''Translate csv column to data variable.
+
+        '''
+
         state = self.variable_map[self._key][0];
         key = self.variable_map[self._key][1];
         varname = state + '_' + key;
@@ -555,17 +611,25 @@ class _Constraint(_Type):
 
 ## Prices       
 class _Price(_Type):
-    '''Mixin class for price data.'''
-        
+    '''Mixin class for price data.
+
+    '''
+
     def _make_mpcpy_ts_list(self):
-        '''Make mpcpy timeseries list.'''
+        '''Make mpcpy timeseries list.
+
+        '''
+
         self._ts_list = [];
         for key in self.data.keys():
             if self.data[key].variability == 'Timeseries':
                 self._ts_list.append(self.data[key]);
 
     def _translate_variable_map(self):
-        '''Translate csv column to data variable.'''
+        '''Translate csv column to data variable.
+
+        '''
+
         varname = self.variable_map[self._key][0];
         unit = self.variable_map[self._key][1];
         self.data[varname] = self._dataframe_to_mpcpy_ts_variable(self._df_csv, self._key, varname, unit, \
@@ -576,7 +640,9 @@ class _Price(_Type):
 
 ## Parameters       
 class _Parameter(_Type):
-    '''Mixin class for parameter data.'''
+    '''Mixin class for parameter data.
+
+    '''
 
     def display_data(self):
         '''Display data as pandas dataframe.
@@ -639,7 +705,10 @@ class WeatherFromEPW(_Weather):
         
     '''
     def __init__(self, filepath):
-        '''Constructor of EPW file weather data object.'''
+        '''Constructor of EPW file weather data object.
+
+        '''
+
         self.filepath = filepath;
         self._read_lat_lon_timZon_from_epw();
         self.tz = tzwhere.tzwhere();
@@ -653,7 +722,10 @@ class WeatherFromEPW(_Weather):
                                   'weaSolZen'];         
 
     def _collect_data(self, start_time, final_time):
-        '''Collect weather data from EPW file.'''
+        '''Collect weather data from EPW file.
+
+        '''
+
         # Set time interval
         self._set_time_interval(start_time, final_time);
         # Get bulk timeseries weather data
@@ -664,14 +736,20 @@ class WeatherFromEPW(_Weather):
         return self.data
         
     def _read_lat_lon_timZon_from_epw(self):
-        '''Get Latitude, Longitude, and Time Zone from EPW file.'''
+        '''Get Latitude, Longitude, and Time Zone from EPW file.
+
+        '''
+
         df_epw = pd.read_csv(self.filepath, nrows = 1, header = None, usecols = [6,7,8], names = ['Latitude', 'Longitude', 'TimeZone']);
         self.lat = variables.Static('lat', df_epw.loc[0,'Latitude'], units.deg);
         self.lon = variables.Static('lon', df_epw.loc[0,'Longitude'], units.deg); 
         self.time_zone = variables.Static('timZon', df_epw.loc[0,'TimeZone'], units.hour);
         
     def _read_timeseries_from_epw(self):
-        '''Read in timeseries weather data from EPW file.'''
+        '''Read in timeseries weather data from EPW file.
+
+        '''
+
         # Define column headers to read in from epw
         header = ['Year', 'Month', 'Day', 'Hour', 'Second', 'Unknown', \
                   'Dry bulb temperature', 'Dew point temperature', \
@@ -818,8 +896,12 @@ class WeatherFromCSV(_Weather, utility.DAQ):
         Timezone name.        
 
     '''
+
     def __init__(self, filepath, variable_map, **kwargs):
-        '''Constructor of CSV file weather data object.'''
+        '''Constructor of CSV file weather data object.
+
+        '''
+
         self.filepath = filepath;  
         self.data = {};   
         self.variable_map = variable_map;          
@@ -836,7 +918,10 @@ class WeatherFromCSV(_Weather, utility.DAQ):
         assert(bool(self.lon) == True);
            
     def _collect_data(self, start_time, final_time):
-        '''Collect weather data from CSV file.'''
+        '''Collect weather data from CSV file.
+
+        '''
+
         # Set time interval
         self._set_time_interval(start_time, final_time);
         # Get bulk time series        
@@ -871,7 +956,10 @@ class InternalFromCSV(_Internal, utility.DAQ):
     '''
     
     def __init__(self, filepath, variable_map, **kwargs):
-        ''' Constructor of csv internal source.'''
+        ''' Constructor of csv internal source.
+
+        '''
+
         self.filepath = filepath;
         self.data = {};
         self.variable_map = variable_map;
@@ -880,7 +968,10 @@ class InternalFromCSV(_Internal, utility.DAQ):
         self._parse_time_zone_kwargs(kwargs);
                    
     def _collect_data(self, start_time, final_time):
-        '''Collect internal data from CSV file.'''
+        '''Collect internal data from CSV file.
+
+        '''
+
         # Set time interval
         self._set_time_interval(start_time, final_time);
         # Get bulk time series        
@@ -916,7 +1007,10 @@ class InternalFromOccupancyModel(_Internal):
     '''
     
     def __init__(self, zone_list, load_list, unit, occupancy_model_list, **kwargs):
-        '''Constructor of occupancy model internal source.'''
+        '''Constructor of occupancy model internal source
+
+        '''
+
         self.zone_list = zone_list;
         self.load_list = load_list;
         self.unit = unit;        
@@ -926,7 +1020,10 @@ class InternalFromOccupancyModel(_Internal):
         self._parse_time_zone_kwargs(kwargs);
         
     def _collect_data(self, start_time, final_time):
-        '''Collect internal data from an occupancy model object.'''
+        '''Collect internal data from an occupancy model object.
+
+        '''
+
         # Set time interval
         self._set_time_interval(start_time, final_time);
         # Get bulk time series
@@ -962,7 +1059,10 @@ class ControlFromCSV(_Control, utility.DAQ):
     '''
     
     def __init__(self, filepath, variable_map, **kwargs):
-        ''' Constructor of csv control source.'''
+        ''' Constructor of csv control source.
+
+        '''
+        
         self.filepath = filepath;
         self.data = {};
         self.variable_map = variable_map;
@@ -971,7 +1071,10 @@ class ControlFromCSV(_Control, utility.DAQ):
         self._parse_time_zone_kwargs(kwargs);             
                    
     def _collect_data(self, start_time, final_time):
-        '''Collect control data from CSV file.'''
+        '''Collect control data from CSV file.
+
+        '''
+        
         # Set time interval
         self._set_time_interval(start_time, final_time);
         # Get bulk time series        
@@ -1003,7 +1106,10 @@ class OtherInputFromCSV(_OtherInput, utility.DAQ):
     '''
     
     def __init__(self, csv_filepath, variable_map, **kwargs):
-        ''' Constructor of csv other input source.'''
+        ''' Constructor of csv other input source.
+
+        '''
+
         self.name = 'otherinput_from_csv';
         self.filepath = csv_filepath;
         self.data = {};   
@@ -1014,7 +1120,10 @@ class OtherInputFromCSV(_OtherInput, utility.DAQ):
         self._parse_time_zone_kwargs(kwargs);             
                    
     def _collect_data(self, start_time, final_time):
-        '''Collect other input data from CSV file.'''
+        '''Collect other input data from CSV file.
+
+        '''
+
         # Set time interval
         self._set_time_interval(start_time, final_time);
         # Get bulk time series        
@@ -1043,11 +1152,14 @@ class ConstraintFromCSV(_Constraint, utility.DAQ):
         Longitude in degrees.  For timezone.
     tz_name : string
         Timezone name.
-    
+
     '''
-    
+
     def __init__(self, filepath, variable_map, **kwargs):
-        ''' Constructor of csv constraint source.'''
+        ''' Constructor of csv constraint source.
+
+        '''
+
         self.filepath = filepath;
         self.data = {};
         self.variable_map = variable_map;
@@ -1056,7 +1168,10 @@ class ConstraintFromCSV(_Constraint, utility.DAQ):
         self._parse_time_zone_kwargs(kwargs);
             
     def _collect_data(self, start_time, final_time):
-        '''Collect constraint data from CSV file.'''
+        '''Collect constraint data from CSV file.
+
+        '''
+
         # Set time interval
         self._set_time_interval(start_time, final_time);
         # Get bulk time series        
@@ -1092,8 +1207,12 @@ class ConstraintFromOccupancyModel(_Constraint):
         Timezone name.        
 
     '''
+    
     def __init__(self, state_variable_list, values_list, constraint_type_list, unit_list, occupancy_model, **kwargs):
-        '''Constructor of occupancy model constraint source.'''
+        '''Constructor of occupancy model constraint source.
+
+        '''
+
         self.state_variable_list = state_variable_list;
         self.values_list = values_list;
         self.constraint_type_list = constraint_type_list;
@@ -1104,7 +1223,10 @@ class ConstraintFromOccupancyModel(_Constraint):
         self._parse_time_zone_kwargs(kwargs);
         
     def _collect_data(self, start_time, final_time):
-        '''Collect constraint data from occupancy model.'''
+        '''Collect constraint data from occupancy model.
+
+        '''
+
         # Set time interval
         self._set_time_interval(start_time, final_time);
         # Get bulk time series
@@ -1139,7 +1261,10 @@ class PriceFromCSV(_Price, utility.DAQ):
     '''        
 
     def __init__(self, filepath, variable_map, **kwargs):
-        ''' Constructor of csv price source.'''
+        ''' Constructor of csv price source.
+
+        '''
+
         self.name = 'constraint_from_csv';
         self.filepath = filepath;
         self.data = {};   
@@ -1149,7 +1274,10 @@ class PriceFromCSV(_Price, utility.DAQ):
         self._parse_time_zone_kwargs(kwargs);
             
     def _collect_data(self, start_time, final_time):
-        '''Collect price data from a csv file.'''
+        '''Collect price data from a csv file.
+
+        '''
+
         # Set time interval
         self._set_time_interval(start_time, final_time);
         # Get bulk time series        
@@ -1174,10 +1302,15 @@ class ParameterFromCSV(_Parameter, utility.DAQ):
         {"Parameter Name" : {"Parameter Variable Name" : mpcpy.Variables.Static}}.
     
     '''
+    
     def __init__(self, filepath):
-        ''' Constructor of csv parameter data source.'''
+        ''' Constructor of csv parameter data source.
+
+        '''
+
         self.filepath = filepath;
         self.data = {};
+        
     def collect_data(self):
         '''Collect parameter data from CSV file.
         

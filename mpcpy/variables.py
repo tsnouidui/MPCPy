@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-``variables`` classes are the fundamental building blocks of 
-data management in MPCPy.  They provide functionality for assigning and 
-converting between units as well as processing timeseries data.  
+``variables`` classes together with ``units`` classes form the fundamental 
+building blocks of data management in MPCPy.  They provide functionality for 
+assigning and converting between units as well as processing timeseries data.  
 
 Generally speaking, variables in MPCPy contain three components:
 
@@ -120,11 +120,18 @@ import numpy as np
 
 #%% Variable abstract class
 class Variable(object):
-    '''Base class for variables.'''
-    
+    '''Base class for variables.
+
+    '''
+
     __metaclass__ = ABCMeta;
+    
     @abstractmethod
     def set_data(self,data):
+        '''Set the data of the variable including any conversions to be performed.
+        
+        '''
+        
         pass;
         
     def display_data(self):
@@ -323,7 +330,9 @@ class Static(Variable):
     '''
 
     def __init__(self, name, data, display_unit):
-        '''Constructor of Static variable object.'''
+        '''Constructor of Static variable object.
+        
+        '''
         
         self.name = name;
         self.variability = 'Static';
@@ -346,23 +355,25 @@ class Static(Variable):
         '''
 
         if isinstance(data, float):
-            self.data = self.display_unit.convert_to_base(float(data));
+            self.data = self.display_unit._convert_to_base(float(data));
         elif isinstance(data, int): 
-            self.data = self.display_unit.convert_to_base(float(data));
+            self.data = self.display_unit._convert_to_base(float(data));
         elif isinstance(data, list):
-            self.data = [self.display_unit.convert_to_base(float(x)) for x in data];
+            self.data = [self.display_unit._convert_to_base(float(x)) for x in data];
         elif isinstance(data, np.ndarray):
-            self.data = np.array([self.display_unit.convert_to_base(float(x)) for x in data]);
+            self.data = np.array([self.display_unit._convert_to_base(float(x)) for x in data]);
         else:
-            self.data = self.display_unit.convert_to_base(data);
+            self.data = self.display_unit._convert_to_base(data);
 
     def _display_data(self):
-        '''Return the data of the variable in display units.'''
+        '''Return the data of the variable in display units.
+
+        '''
 
         if isinstance(self.data, list):
-            self._data = [self.display_unit.convert_from_base(x) for x in self.data];
+            self._data = [self.display_unit._convert_from_base(x) for x in self.data];
         else:
-            self._data = self.display_unit.convert_from_base(self.data);
+            self._data = self.display_unit._convert_from_base(self.data);
 
 class Timeseries(Variable):
     '''Variable class with data that is a timeseries.
@@ -398,7 +409,9 @@ class Timeseries(Variable):
     '''
 
     def __init__(self, name, timeseries, display_unit, tz_name = 'UTC', **kwargs):
-        '''Constructor of Timeseries variable object.'''
+        '''Constructor of Timeseries variable object.
+
+        '''
 
         self.variability = 'Timeseries';
         self.display_unit = display_unit(self);
@@ -438,7 +451,7 @@ class Timeseries(Variable):
             self.tz_name = tz_name;
             self._timeseries = self._local_to_utc(self._timeseries);
             
-        self.data = self.display_unit.convert_to_base(self._timeseries.apply(float));
+        self.data = self.display_unit._convert_to_base(self._timeseries.apply(float));
 
     def _display_data(self):
         '''Return the data of the variable in display units.
@@ -450,7 +463,7 @@ class Timeseries(Variable):
         
         '''
         
-        self._data = self.display_unit.convert_from_base(self.data);
+        self._data = self.display_unit._convert_from_base(self.data);
         self._data = self._utc_to_local(self._data);
 
     def _local_to_utc(self, df_local):

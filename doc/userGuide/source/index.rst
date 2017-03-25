@@ -8,8 +8,8 @@ User Guide
 
    introduction
    gettingStarted
-   variables
    units
+   variables
    exodata
    systems
    models

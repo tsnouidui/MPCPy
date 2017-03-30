@@ -140,10 +140,14 @@ class EmulationFromFMU(_Emulation, utility.FMU):
     
     Parameters
     ----------
-    fmupath : string
-        FMU file path.
     measurements : dictionary
         {"Measurement Name" : {"Sample" : mpcpy.Variables.Static}}.
+    fmupath : string, required if not moinfo
+        FMU file path.
+    moinfo : tuple or list, required if not fmupath
+        (mopath, modelpath, libraries).  `mopath` is the path to the modelica file.
+        `modelpath` is the path to the model to be compiled within the package specified in the modelica file.
+        `libraries` is a list of paths directing to extra libraries required to compile the fmu.
 
     Attributes
     ----------
@@ -170,12 +174,13 @@ class EmulationFromFMU(_Emulation, utility.FMU):
 
     '''
 
-    def __init__(self, fmupath, measurements, **kwargs):
+    def __init__(self, measurements, **kwargs):
         '''Constructor of system emulation by FMU.
 
         '''
 
-        self.fmupath = fmupath;
+        self.name = 'emulation_from_fmu';
+        self._create_fmu(kwargs);
         self.measurements = measurements
         self.input_names = self._get_input_names();        
         self._parse_building_kwargs(kwargs);

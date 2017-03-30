@@ -60,8 +60,8 @@ class EmulationfromFMU(unittest.TestCase):
         self.parameter_data['lat']['Value'] = self.weather.lat;
         
         # Instantiate building source
-        self.building = systems.EmulationFromFMU(self.building_source_file_path, \
-                                                 self.measurements, \
+        self.building = systems.EmulationFromFMU(self.measurements, \
+                                                 fmupath = self.building_source_file_path, \
                                                  zone_names = self.zone_names, \
                                                  weather_data = self.weather.data, \
                                                  internal_data = self.internal.data, \
@@ -101,7 +101,7 @@ class EmulationfromFMU(unittest.TestCase):
         for key in self.building.measurements.keys():
             variable = self.building.measurements[key]['Measured'];
             variable.set_display_unit(units.degC);
-            variable.display_data(tz_name = 'America/Chicago').plot(label = key, rot = 90, linewidth = 2.0);
+            variable.display_data().plot(label = key, rot = 90, linewidth = 2.0);
         plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1), ncol=4, prop={'size':12});        
         plt.ylabel(variable.quantity_name + ' [' + variable.display_unit.name + ']');
         plt.rcParams.update({'font.size': 16});

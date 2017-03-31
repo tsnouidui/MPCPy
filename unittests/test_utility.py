@@ -21,11 +21,11 @@ class TestEmulationFromFMU(unittest.TestCase):
         self.parameter_data['par']['Value'] = 1;        
         self.building = systems.EmulationFromFMU({}, fmupath = utility.get_MPCPy_path()+'/resources/building/Examples_LBNL71T_Emulation_WithHeaters_ME1.fmu', parameter_data = self.parameter_data);
     def test_get_fmu_variable_units(self):
-        fmu_variables_units = self.building.get_fmu_variable_units();
+        fmu_variables_units = self.building._get_fmu_variable_units();
         self.assertEqual(fmu_variables_units['wesTdb'], 'K');
     def test_get_unit_class_from_fmu_variable_units(self):
-        fmu_variables_units = self.building.get_fmu_variable_units();
-        unit_class = self.building.get_unit_class_from_fmu_variable_units('wesTdb', fmu_variables_units);
+        fmu_variables_units = self.building._get_fmu_variable_units();
+        unit_class = self.building._get_unit_class_from_fmu_variable_units('wesTdb', fmu_variables_units);
         self.assertIs(unit_class, units.K);      
     def test_get_unit_class_from_unit_string(self):
         unit_class = utility.get_unit_class_from_unit_string('(m2.K)/W');
@@ -43,7 +43,7 @@ class TestFMIVersionDefault(unittest.TestCase):
     def test_fmi_default(self):
         building = systems.EmulationFromFMU({}, moinfo = (self.mopath, self.modelpath, {}));
         self.assertEqual(building.fmu.get_version(), '2.0');
-        model = models.Modelica(models.JModelica, models.RMSE, {}, moinfo = (self.mopath, self.modelpath, {}));
+        model = models.PhysicalFromModelica(models.EstimateFromJModelica, models.RMSE, {}, moinfo = (self.mopath, self.modelpath, {}));
         self.assertEqual(model.fmu.get_version(), '2.0');
         
 class TestGetInputNames(unittest.TestCase):
@@ -55,7 +55,7 @@ class TestGetInputNames(unittest.TestCase):
         for version in ['1.0', '2.0']:
             building = systems.EmulationFromFMU({}, moinfo = (self.mopath, self.modelpath, {}), version = version);
             self.assertEqual(building.input_names, ['q_flow']);
-            model = models.Modelica(models.JModelica, models.RMSE, {}, moinfo = (self.mopath, self.modelpath, {}), version = version);
+            model = models.PhysicalFromModelica(models.EstimateFromJModelica, models.RMSE, {}, moinfo = (self.mopath, self.modelpath, {}), version = version);
             self.assertEqual(model.input_names, ['q_flow']);
 
 if __name__ == '__main__':

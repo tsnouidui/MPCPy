@@ -34,7 +34,7 @@ class SimpleRC(unittest.TestCase):
         self.measurements = {};
         self.measurements['T_db'] = {'Sample' : variables.Static('T_db_sample', 1800, units.s)};
         # Instantiate model
-        self.model = models.Modelica(models.JModelica, \
+        self.model = models.PhysicalFromModelica(models.EstimateFromJModelica, \
                                      models.RMSE, \
                                      self.measurements, \
                                      moinfo = (mopath, modelpath, {}), \
@@ -77,7 +77,7 @@ class Optimize_Jmo(unittest.TestCase):
         self.mopath = self.MPCPyPath + '/resources/model/LBNL71T_MPC.mo';
         self.modelpath = 'LBNL71T_MPC.MPC';
         self.libraries = os.environ.get('MODELICAPATH');
-        self.estimate_method = models.JModelica; 
+        self.estimate_method = models.EstimateFromJModelica; 
         self.validation_method = models.RMSE;
         self.zone_names = ['wes', 'hal', 'eas'];                   
         # Measurements
@@ -166,7 +166,7 @@ class Optimize_Jmo(unittest.TestCase):
         self.parameters.data['lat'] = {};
         self.parameters.data['lat']['Value'] = self.weather.lat;     
         ## Instantiate model
-        self.model = models.Modelica(self.estimate_method, \
+        self.model = models.PhysicalFromModelica(self.estimate_method, \
                                      self.validation_method, \
                                      self.measurements, \
                                      moinfo = (self.mopath, self.modelpath, self.libraries), \
@@ -189,7 +189,7 @@ class Optimize_Jmo(unittest.TestCase):
         for measurement in ['wesTdb', 'easTdb', 'halTdb']:
             variable = self.model.measurements[measurement]['Simulated'];
             variable.set_display_unit(units.degC);
-            var_data = variable.display_data(tz_name = 'America/Chicago');
+            var_data = variable.display_data();
             var_data.plot(label = measurement, rot = 90, linewidth = 2.0);
         plt.ylabel(variable.quantity_name + ' [' + variable.display_unit.name + ']');
         plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1), ncol=4, prop={'size':12});
@@ -200,7 +200,7 @@ class Optimize_Jmo(unittest.TestCase):
         for measurement in ['wesPhvac', 'easPhvac', 'halPhvac', 'Ptot']:
             variable = self.model.measurements[measurement]['Simulated'];
             variable.set_display_unit(units.W);
-            var_data = variable.display_data(tz_name = 'America/Chicago');
+            var_data = variable.display_data();
             var_data.plot(label = measurement, rot = 90, linewidth = 2.0);
         plt.ylabel(variable.quantity_name + ' [' + variable.display_unit.name + ']');
         plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1), ncol=4, prop={'size':12});
@@ -221,7 +221,7 @@ class Optimize_Jmo(unittest.TestCase):
         for measurement in ['wesTdb', 'easTdb', 'halTdb']:
             variable = self.model.measurements[measurement]['Simulated'];
             variable.set_display_unit(units.degC);
-            var_data = variable.display_data(tz_name = 'America/Chicago');
+            var_data = variable.display_data();
             var_data.plot(label = measurement, rot = 90, linewidth = 2.0);
         plt.ylabel(variable.quantity_name + ' [' + variable.display_unit.name + ']');
         plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1), ncol=4, prop={'size':12});
@@ -232,7 +232,7 @@ class Optimize_Jmo(unittest.TestCase):
         for measurement in ['wesPhvac', 'easPhvac', 'halPhvac', 'Ptot']:
             variable = self.model.measurements[measurement]['Simulated'];
             variable.set_display_unit(units.W);
-            var_data = variable.display_data(tz_name = 'America/Chicago');
+            var_data = variable.display_data();
             var_data.plot(label = measurement, rot = 90, linewidth = 2.0);
         plt.ylabel(variable.quantity_name + ' [' + variable.display_unit.name + ']');
         plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1), ncol=4, prop={'size':12});

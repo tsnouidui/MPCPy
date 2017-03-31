@@ -200,17 +200,20 @@ class FMU(mpcpyPandas):
         self.input_df = self._mpcpy_ts_list_to_dataframe(input_mpcpy_ts_list);
         self.input_object = self._dataframe_to_input_object(self.input_df[self.start_time_utc:self.final_time_utc]);   
         
-    def _create_fmu(self, kwargs):
+    def _create_fmu(self, moinfo = None, fmupath = None, **kwargs):
         '''Store FMU or compile FMU and store from Modelica code.'''
-        if 'fmupath' in kwargs:
-            self.fmupath = kwargs['fmupath'];
+        if (fmupath is not None and moinfo is not None) or (fmupath is None and moinfo is None):
+            raise ValueError('Check that exactly one of either moinfo or fmupath is supplied.');
+            
+        if fmupath is not None:
+            self.fmupath = fmupath;
             self.mopath = None;
             self.modelpath = None
             self.libraries = None;
-        if 'moinfo' in kwargs:
-            self.mopath = kwargs['moinfo'][0];
-            self.modelpath = kwargs['moinfo'][1];
-            self.libraries = kwargs['moinfo'][2];
+        if moinfo is not None:
+            self.mopath = moinfo[0];
+            self.modelpath = moinfo[1];
+            self.libraries = moinfo[2];
             if 'version' in kwargs:
                 version = kwargs['version'];
             else:

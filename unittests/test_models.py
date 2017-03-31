@@ -24,10 +24,10 @@ class SimpleRC(unittest.TestCase):
         self.final_time = '1/2/2017';
         self.MPCPyPath = utility.get_MPCPy_path();
         # Set model paths
-        mopath = self.MPCPyPath+'resources/model/Simple.mo';
+        mopath = self.MPCPyPath+'/resources/model/Simple.mo';
         modelpath = 'Simple.RC';
         # Gather inputs
-        input_csv_filepath = self.MPCPyPath+'resources/model/SimpleRC_Input.csv';
+        input_csv_filepath = self.MPCPyPath+'/resources/model/SimpleRC_Input.csv';
         variable_map = {'q_flow' : ('q_flow', units.W)};
         self.other_input = exodata.OtherInputFromCSV(input_csv_filepath, variable_map);
         self.other_input.collect_data(self.start_time, self.final_time);
@@ -35,11 +35,11 @@ class SimpleRC(unittest.TestCase):
         self.measurements = {};
         self.measurements['T_db'] = {'Sample' : variables.Static('T_db_sample', 1800, units.s)};
         # Instantiate model
-        self.model = models.Modelica(models.JModelica, \
-                                     models.RMSE, \
-                                     self.measurements, \
-                                     moinfo = (mopath, modelpath, {}), \
-                                     other_inputs = self.other_input.data);
+        self.model = models.PhysicalFromModelica(models.EstimateFromJModelica, \
+                                                 models.RMSE, \
+                                                 self.measurements, \
+                                                 moinfo = (mopath, modelpath, {}), \
+                                                 other_inputs = self.other_input.data);
     def test_simulate(self):
         self.model.simulate(self.start_time, self.final_time);
         plt.figure(1)
@@ -87,7 +87,7 @@ class Estimate_Jmo(unittest.TestCase):
         self.mopath = self.MPCPyPath + '/resources/model/LBNL71T_MPC.mo';
         self.modelpath = 'LBNL71T_MPC.MPC';
         self.libraries = os.environ.get('MODELICAPATH');
-        self.estimate_method = models.JModelica; 
+        self.estimate_method = models.EstimateFromJModelica; 
         self.validation_method = models.RMSE;
             
         
@@ -125,16 +125,16 @@ class Estimate_Jmo(unittest.TestCase):
         self.building.tz_name = self.weather.tz_name;
         self.building.collect_measurements(self.start_time, self.final_time);
         # Instantiate model
-        self.model = models.Modelica(self.estimate_method, \
-                                     self.validation_method, \
-                                     self.building.measurements, \
-                                     moinfo = (self.mopath, self.modelpath, self.libraries), \
-                                     zone_names = self.zone_names, \
-                                     weather_data = self.weather.data, \
-                                     internal_data = self.internal.data, \
-                                     control_data = self.control.data, \
-                                     parameter_data = self.parameters.data, \
-                                     tz_name = self.weather.tz_name);                    
+        self.model = models.PhysicalFromModelica(self.estimate_method, \
+                                                 self.validation_method, \
+                                                 self.building.measurements, \
+                                                 moinfo = (self.mopath, self.modelpath, self.libraries), \
+                                                 zone_names = self.zone_names, \
+                                                 weather_data = self.weather.data, \
+                                                 internal_data = self.internal.data, \
+                                                 control_data = self.control.data, \
+                                                 parameter_data = self.parameters.data, \
+                                                 tz_name = self.weather.tz_name);                    
         # Simulate model with current guess of coefficients
         self.model.simulate(self.start_time, self.final_time);
         # Compare model simulation with building emulation
@@ -183,16 +183,16 @@ class Estimate_Jmo(unittest.TestCase):
         self.building.collect_measurements(self.start_time_emulation, self.final_time_emulation);
         
         # Instantiate model
-        self.model = models.Modelica(self.estimate_method, \
-                                     self.validation_method, \
-                                     self.building.measurements, \
-                                     moinfo = (self.mopath, self.modelpath, self.libraries), \
-                                     zone_names = self.zone_names, \
-                                     weather_data = self.weather.data, \
-                                     internal_data = self.internal.data, \
-                                     control_data = self.control.data, \
-                                     parameter_data = self.parameters.data, \
-                                     tz_name = self.weather.tz_name);                 
+        self.model = models.PhysicalFromModelica(self.estimate_method, \
+                                                 self.validation_method, \
+                                                 self.building.measurements, \
+                                                 moinfo = (self.mopath, self.modelpath, self.libraries), \
+                                                 zone_names = self.zone_names, \
+                                                 weather_data = self.weather.data, \
+                                                 internal_data = self.internal.data, \
+                                                 control_data = self.control.data, \
+                                                 parameter_data = self.parameters.data, \
+                                                 tz_name = self.weather.tz_name);                 
         # Estimate model based on emulated data
         self.model.estimate(self.start_time_estimation, self.final_time_estimation, self.measurement_variable_list);
         self.parameters.data = self.model.parameter_data;
@@ -234,9 +234,9 @@ class Queueing(unittest.TestCase):
         # Collect measurements
         self.building.collect_measurements(self.start_time, self.final_time);                                            
         # Instantiate occupancy model
-        self.occupancy = models.Occupancy(models.QueueModel, self.building.measurements);
+        self.occupancy = models.OccupancyFromQueue(self.building.measurements);
         # Estimate occupancy model parameters
-        self.occupancy.estimate(self.start_time, self.final_time);
+        self.occupancy.estimate(self.start_time, self.final_time, 'occupancy');
         with open(self.MPCPyPath+'/unittests/resources/occupancy_model_estimated.txt', 'w') as f:
             pickle.dump(self.occupancy, f);
             
@@ -271,7 +271,7 @@ class Queueing(unittest.TestCase):
         self.occupancy.set_simulate_options(simulate_options);
         self.occupancy.validate(self.start_time, self.final_time, self.MPCPyPath+'/unittests/resources/occupancy_model_validate');
         
-    def test_generate_load(self):
+    def test_get_load(self):
         '''Test generation of occupancy load data using occupancy prediction.'''
         plt.close('all');
         # Time
@@ -284,8 +284,9 @@ class Queueing(unittest.TestCase):
         simulate_options = self.occupancy.get_simulate_options();
         simulate_options['iter_num'] = 5;            
         self.occupancy.simulate(self.start_time, self.final_time);
-        load = self.occupancy.generate_load(100);
-        load.plot();
+        load_per_person = variables.Static('load_per_person', 100, units.W);
+        load = self.occupancy.get_load(load_per_person);
+        load.display_data().plot();
         plt.ylabel('Internal Load [W]');
         plt.xlabel('Time');
         plt.savefig(self.MPCPyPath+'/unittests/resources/occupancy_model_load.png');
@@ -304,8 +305,10 @@ class Queueing(unittest.TestCase):
         simulate_options = self.occupancy.get_simulate_options();
         simulate_options['iter_num'] = 5;               
         self.occupancy.simulate(self.start_time, self.final_time);
-        constraint = self.occupancy.generate_constraint(20, 25);
-        constraint.plot();
+        occ_value = variables.Static('occ_value', 20, units.degC);
+        unocc_value = variables.Static('unocc_value', 25, units.degC);
+        constraint = self.occupancy.get_constraint(occ_value, unocc_value);
+        constraint.display_data().plot();
         plt.ylim([15,30]);
         plt.ylabel('Temperature [degC]');
         plt.xlabel('Time');
@@ -325,8 +328,7 @@ class Queueing(unittest.TestCase):
         self.occupancy.measurements['occupancy']['Sample'] = variables.Static('occupancy_sample', 299, units.s);
         # Estimate occupancy model parameters and expect error
         with self.assertRaises(ValueError):
-            self.occupancy.estimate(self.start_time, self.final_time);
-                                                    
-    
+            self.occupancy.estimate(self.start_time, self.final_time, 'occupancy');
+
 if __name__ == '__main__':
     unittest.main()

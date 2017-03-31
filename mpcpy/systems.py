@@ -171,18 +171,22 @@ class EmulationFromFMU(_Emulation, utility.FMU):
         Longitude in degrees.  For timezone.
     tz_name : string
         Timezone name.
+    fmu : pyfmi fmu object
+        FMU respresenting the emulated system.
+    fmupath : string
+        Path to the FMU file.
 
     '''
 
-    def __init__(self, measurements, **kwargs):
+    def __init__(self, measurements, moinfo = None, fmupath = None, **kwargs):
         '''Constructor of system emulation by FMU.
 
         '''
 
         self.name = 'emulation_from_fmu';
-        self._create_fmu(kwargs);
+        self._create_fmu(moinfo = moinfo, fmupath = fmupath, kwargs = kwargs);
         self.measurements = measurements
-        self.input_names = self.get_input_names();
+        self.input_names = self._get_input_names();
         self._parse_building_kwargs(kwargs);
         self._parse_time_zone_kwargs(kwargs);
         

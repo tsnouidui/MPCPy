@@ -326,7 +326,7 @@ class JModelica(Package, utility.FMU):
         self.external_data = ExternalData(Q=Q, quad_pen=quad_pen, eliminated=eliminated);
         
     def _get_control_results(self, Optimization):
-        fmu_variable_units = self.get_fmu_variable_units();                                     
+        fmu_variable_units = self._get_fmu_variable_units();                                     
         for key in self.Model.control_data.keys():
             data = self.res_opt['mpc_model.' + key];
             time = self.res_opt['time'];
@@ -334,7 +334,7 @@ class JModelica(Package, utility.FMU):
             timeindex = self.start_time_utc + timedelta;
             ts = pd.Series(data = data, index = timeindex);
             ts.name = key;
-            unit = self.get_unit_class_from_fmu_variable_units('mpc_model.' + key,fmu_variable_units);
+            unit = self._get_unit_class_from_fmu_variable_units('mpc_model.' + key,fmu_variable_units);
             if not unit:
                 unit = units.unit1;                
             Optimization.Model.control_data[key] = variables.Timeseries(key, ts, unit);  
@@ -345,7 +345,7 @@ class JModelica(Package, utility.FMU):
             timeindex = self.start_time_utc + timedelta;
             ts = pd.Series(data = data, index = timeindex);
             ts.name = key;
-            unit = self.get_unit_class_from_fmu_variable_units('mpc_model.' + key,fmu_variable_units);
+            unit = self._get_unit_class_from_fmu_variable_units('mpc_model.' + key,fmu_variable_units);
             if not unit:
                 unit = units.unit1;                
             Optimization.Model.measurements[key]['Simulated'] = variables.Timeseries(key, ts, unit);
@@ -353,8 +353,8 @@ class JModelica(Package, utility.FMU):
     def _get_parameter_results(self, Optimization):
         for key in Optimization.Model.parameter_data.keys():
             if Optimization.Model.parameter_data[key]['Free'].get_base_data():
-                self.fmu_variable_units = self.get_fmu_variable_units();
-                unit_class = self.get_unit_class_from_fmu_variable_units('mpc_model.'+key, self.fmu_variable_units);
+                self.fmu_variable_units = self._get_fmu_variable_units();
+                unit_class = self._get_unit_class_from_fmu_variable_units('mpc_model.'+key, self.fmu_variable_units);
                 data = self.res_opt.initial('mpc_model.' + key);
                 Optimization.Model.parameter_data[key]['Value'].set_display_unit(unit_class);
                 Optimization.Model.parameter_data[key]['Value'].set_data(data);        

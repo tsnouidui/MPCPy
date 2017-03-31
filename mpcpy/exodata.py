@@ -1013,7 +1013,7 @@ class InternalFromOccupancyModel(_Internal):
 
         self.zone_list = zone_list;
         self.load_list = load_list;
-        self.unit = unit;        
+        self.unit = unit;
         self.occupancy_model_list = occupancy_model_list;
         self.data = {};
         # Common kwargs    
@@ -1030,8 +1030,11 @@ class InternalFromOccupancyModel(_Internal):
         for zone, loads, occupancy_model in zip(self.zone_list, self.load_list, self.occupancy_model_list):
             self.data[zone] = {};
             for varname, load in zip(['intCon', 'intRad', 'intLat'], loads):
-                ts = occupancy_model.generate_load(load);
-                self.data[zone][varname] = variables.Timeseries(varname+'_'+zone, ts[self.start_time:self.final_time], self.unit);
+                load_per_person = variables.Static('load_per_person', load, units.W_m2);
+                print(load_per_person.display_data());
+                load = occupancy_model.get_load(load_per_person);
+                ts = load.display_data()[self.start_time:self.final_time];
+                self.data[zone][varname] = variables.Timeseries(varname+'_'+zone, ts, self.unit);
         
 #%% Control source implementations        
 class ControlFromCSV(_Control, utility.DAQ):
@@ -1233,8 +1236,11 @@ class ConstraintFromOccupancyModel(_Constraint):
         for state_variable, values, constraint_type, unit in zip(self.state_variable_list, self.values_list, self.constraint_type_list, self.unit_list):
             if state_variable not in self.data:
                 self.data[state_variable] = {};
-            ts = self.occupancy_model.generate_constraint(values[0], values[1]);
-            self.data[state_variable][constraint_type] = variables.Timeseries(state_variable+'_'+constraint_type, ts[self.start_time:self.final_time], unit);
+            occ_value = variables.Static('occ_values', values[0], unit);
+            unocc_value = variables.Static('occ_values', values[1], unit);
+            constraint = self.occupancy_model.get_constraint(occ_value, unocc_value);
+            ts = constraint.display_data()[self.start_time:self.final_time];
+            self.data[state_variable][constraint_type] = variables.Timeseries(state_variable+'_'+constraint_type, ts, unit);
 
 #%% Price source implementations
 class PriceFromCSV(_Price, utility.DAQ):

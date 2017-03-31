@@ -1,3 +1,5 @@
 ======
 Models
 ======
+
+.. automodule:: mpcpy.models

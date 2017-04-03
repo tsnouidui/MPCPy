@@ -28,7 +28,7 @@ class SimpleRC(unittest.TestCase):
         modelpath = 'Simple.RC';
         # Gather inputs
         input_csv_filepath = self.MPCPyPath+'/resources/model/SimpleRC_Input.csv';
-        variable_map = {'q_flow' : ('q_flow', units.W)};
+        variable_map = {'q_flow_csv' : ('q_flow', units.W)};
         self.other_input = exodata.OtherInputFromCSV(input_csv_filepath, variable_map);
         self.other_input.collect_data(self.start_time, self.final_time);
         # Set measurements
@@ -225,65 +225,40 @@ class Queueing(unittest.TestCase):
                                             self.measurement_variable_map,
                                             time_header = 'Date');       
         
-    def test_estimate(self):
+    def test_estimate_simulate_validate(self):
         '''Test the estimation method.'''
         plt.close('all');
+        # Estimate
         # Time
-        self.start_time = '2/1/2013';
-        self.final_time = '7/24/2013 23:59';
+        self.start_time_est = '2/1/2013';
+        self.final_time_est = '7/24/2013 23:59';
         # Collect measurements
-        self.building.collect_measurements(self.start_time, self.final_time);                                            
+        self.building.collect_measurements(self.start_time_est, self.final_time_est);                                            
         # Instantiate occupancy model
-        self.occupancy = models.OccupancyFromQueue(self.building.measurements);
+        self.occupancy = models.OccupancyFromQueue(self.building.measurements, 'occupancy');
         # Estimate occupancy model parameters
-        self.occupancy.estimate(self.start_time, self.final_time, 'occupancy');
-        with open(self.MPCPyPath+'/unittests/resources/occupancy_model_estimated.txt', 'w') as f:
-            pickle.dump(self.occupancy, f);
-            
-    def test_simulate(self):
-        '''Test occupancy prediction.'''
-        plt.close('all');
+        self.occupancy.estimate(self.start_time_est, self.final_time_est);
+        # Simulate
         # Time
-        self.start_time = '3/1/2013';
-        self.final_time = '3/7/2013 23:59';
-        # Load occupancy model
-        with open(self.MPCPyPath+'/unittests/resources/occupancy_model_estimated.txt', 'r') as f:
-            self.occupancy = pickle.load(f);
+        self.start_time_sim = '3/1/2013';
+        self.final_time_sim = '3/7/2013 23:59';
         # Simulate occupancy model
-        self.occupancy.simulate(self.start_time, self.final_time);
-
-    def test_validate(self):
-        '''Test occupancy prediction comparison with measured data.'''
-        plt.close('all');
+        self.occupancy.simulate(self.start_time_sim, self.final_time_sim);
+        # Validate
         # Time
-        self.start_time = '3/1/2013';
-        self.final_time = '3/7/2013 23:59';           
-        # Load occupancy model
-        with open(self.MPCPyPath+'/unittests/resources/occupancy_model_estimated.txt', 'r') as f:
-            self.occupancy = pickle.load(f);
+        self.start_time_val = '3/1/2013';
+        self.final_time_val = '3/7/2013 23:59';
         # Collect validation measurements
-        self.building.collect_measurements(self.start_time, self.final_time);             
+        self.building.collect_measurements(self.start_time_val, self.final_time_val);             
         # Set valiation measurements in occupancy model        
         self.occupancy.measurements = self.building.measurements;
         # Validate occupancy model with simulation options
         simulate_options = self.occupancy.get_simulate_options();
         simulate_options['iter_num'] = 5;
         self.occupancy.set_simulate_options(simulate_options);
-        self.occupancy.validate(self.start_time, self.final_time, self.MPCPyPath+'/unittests/resources/occupancy_model_validate');
-        
-    def test_get_load(self):
-        '''Test generation of occupancy load data using occupancy prediction.'''
+        self.occupancy.validate(self.start_time_val, self.final_time_val, self.MPCPyPath+'/unittests/resources/occupancy_model_validate');
+        # Get load
         plt.close('all');
-        # Time
-        self.start_time = '3/1/2013';
-        self.final_time = '3/7/2013 23:59';        
-        # Load occupancy model
-        with open(self.MPCPyPath+'/unittests/resources/occupancy_model_estimated.txt', 'r') as f:
-            self.occupancy = pickle.load(f);        
-        # Simulate occupancy model
-        simulate_options = self.occupancy.get_simulate_options();
-        simulate_options['iter_num'] = 5;            
-        self.occupancy.simulate(self.start_time, self.final_time);
         load_per_person = variables.Static('load_per_person', 100, units.W);
         load = self.occupancy.get_load(load_per_person);
         load.display_data().plot();
@@ -291,20 +266,8 @@ class Queueing(unittest.TestCase):
         plt.xlabel('Time');
         plt.savefig(self.MPCPyPath+'/unittests/resources/occupancy_model_load.png');
         plt.close();
-        
-    def test_generate_constraint(self):
-        '''Test generation of occupancy constraint data using occupancy prediction.'''
+        # Get constraint
         plt.close('all');
-        # Time
-        self.start_time = '3/1/2013';
-        self.final_time = '3/7/2013 23:59';        
-        # Load occupancy model
-        with open(self.MPCPyPath+'/unittests/resources/occupancy_model_estimated.txt', 'r') as f:
-            self.occupancy = pickle.load(f);        
-        # Simulate occupancy model
-        simulate_options = self.occupancy.get_simulate_options();
-        simulate_options['iter_num'] = 5;               
-        self.occupancy.simulate(self.start_time, self.final_time);
         occ_value = variables.Static('occ_value', 20, units.degC);
         unocc_value = variables.Static('unocc_value', 25, units.degC);
         constraint = self.occupancy.get_constraint(occ_value, unocc_value);
@@ -320,15 +283,12 @@ class Queueing(unittest.TestCase):
         plt.close('all');
         # Time
         self.start_time = '3/1/2013';
-        self.final_time = '3/7/2013 23:59';        
-        # Load occupancy model
-        with open(self.MPCPyPath+'/unittests/resources/occupancy_model_estimated.txt', 'r') as f:
-            self.occupancy = pickle.load(f);
+        self.final_time = '3/7/2013 23:59';  
         # Change occupant measurements to not be whole number in points per day
-        self.occupancy.measurements['occupancy']['Sample'] = variables.Static('occupancy_sample', 299, units.s);
-        # Estimate occupancy model parameters and expect error
+        self.building.measurements['occupancy']['Sample'] = variables.Static('occupancy_sample', 299, units.s);
+        # Load occupancy model
         with self.assertRaises(ValueError):
-            self.occupancy.estimate(self.start_time, self.final_time, 'occupancy');
+            self.occupancy = models.OccupancyFromQueue(self.building.measurements, 'occupancy');
 
 if __name__ == '__main__':
     unittest.main()

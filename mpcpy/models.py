@@ -213,7 +213,7 @@ class _Occupancy(_Model):
 
     '''
 
-    def estimate(self, start_time, final_time, measurement_variable, **kwargs):
+    def estimate(self, start_time, final_time, **kwargs):
         '''Estimate the parameters of the model.
 
         Parameters
@@ -222,9 +222,6 @@ class _Occupancy(_Model):
             Start time of estimation period.
         final_time : string
             Final time of estimation period.
-        measurement_variable : string
-            Defines which variable in the measurements attribute represents 
-            occupancy count.
 
         Yields
         ------
@@ -240,7 +237,7 @@ class _Occupancy(_Model):
         if 'estimate_options' in kwargs:
             self.set_estimate_options(kwargs['estimate_options']);
         # Perform estimation
-        self._estimate(measurement_variable);
+        self._estimate();
         
     def validate(self, start_time, final_time, validate_filepath, plot = 1):
         '''Validate the estimated parameters of the model.
@@ -650,6 +647,9 @@ class OccupancyFromQueue(_Occupancy):
         Measurement variables for the model.  Same as the measurements 
         attribute from a ``systems`` class.  See documentation for ``systems`` 
         for more information.
+    measurement_variable : string
+        Defines which variable in the measurements attribute represents 
+        occupancy count.
 
     Attributes
     ----------
@@ -671,9 +671,10 @@ class OccupancyFromQueue(_Occupancy):
         Longitude in degrees.  For timezone.
     tz_name : string
         Timezone name.
+
     '''
 
-    def __init__(self, measurements, **kwargs):
+    def __init__(self, measurements, measurement_variable, **kwargs):
         '''Constructor of an occupancy model object using a queueing approach.
 
         '''
@@ -689,14 +690,21 @@ class OccupancyFromQueue(_Occupancy):
         self.estimate_options['n_max'] = 24;
         self.simulate_options = {};
         self.simulate_options['iter_num'] = 100;
+        # Set the occupancy measurement key
+        self.occ_key = measurement_variable;
+        # Calculate the number of measurement points in a full day
+        self.points_per_day = 3600*24.0/self.measurements[self.occ_key]['Sample'].get_base_data();
+        # Check that points_per_day is whole number and convert to integer
+        if self.points_per_day.is_integer():
+            self.points_per_day = int(self.points_per_day);
+        else:
+            raise ValueError('Points per day of {} is not a whole number. Check occupancy measurement sampling rate.'.format(self.points_per_day));
         
-    def _estimate(self, measurement_variable):
+    def _estimate(self):
         '''Use measured occupancy data to estimate the queue model parameters.
 
         '''
 
-        # Set the occupancy measurement key
-        self.occ_key = measurement_variable;
         # Set estimation options
         res = self.estimate_options['res'];
         margin = self.estimate_options['margin'];
@@ -836,14 +844,7 @@ class OccupancyFromQueue(_Occupancy):
         # Get the training data from measurements
         self.df_data_train = self.measurements[self.occ_key]['Measured'].get_base_data()[self.start_time:self.final_time];        
         # Specify the weekday number of each measurement point
-        self.df_data_train['day'] = self.df_data_train.index.weekday;
-        # Calculate the number of measurement points in a full day
-        self.points_per_day = 3600*24.0/self.measurements[self.occ_key]['Sample'].get_base_data();
-        # Check that points_per_day is whole number and convert to integer
-        if self.points_per_day.is_integer():
-            self.points_per_day = int(self.points_per_day);
-        else:
-            raise ValueError('Points per day of {} is not a whole number. Check occupancy measurement sampling rate.'.format(self.points_per_day));      
+        self.df_data_train['day'] = self.df_data_train.index.weekday;   
         # Isolate the measurement data for the day of interest
         df_interest = self.df_data_train[self.df_data_train['day'] == day];
         # Format isolated data for use in parameter estimation procedure
